@@ -37,9 +37,10 @@ public:
     QString getSample();
 
     void pronounceWord();
-    void pronounceCategory();
-    void pronounceDefinition();
-    void pronounceSample();
+    void pronounceWordAlt();
+    void pronounceCategory(bool online);
+    void pronounceDefinition(bool online);
+    void pronounceSample(bool online);
 };
 
 #endif // WORD_H

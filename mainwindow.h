@@ -1,8 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QLabel>
 #include <QMainWindow>
 #include "classroom.h"
+#include "statistics.h"
 
 namespace Ui {
 class MainWindow;
@@ -33,22 +35,27 @@ private:
     QMenu *userMenu;
     QAction *loginAct;
     QAction *logoutAct;
+    QAction *retryAct;
 
 private slots:
     void login();
     void logout();
+    void retry();
     void onEnterKey();
-
 
 private:
     ClassRoom *classRoom;
     QString mDictionary;
     QString mUsername;
     int mGrade, mMode;
+    bool mDone;
 
     void loadSettings();
     void saveSettings();
+    void onStart();
     void onUpdateUi();
+    void showStats(QLabel *label, Statistics *stats);
+    void showPlaceResult(QLabel *label, int finishedGrade);
 };
 
 #endif // MAINWINDOW_H

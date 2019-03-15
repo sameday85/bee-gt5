@@ -29,6 +29,7 @@ void MainWindow::createMenus()
     userMenu = menuBar()->addMenu(tr("&User"));
     userMenu->addAction(loginAct);
     userMenu->addAction(logoutAct);
+    userMenu->addAction(retryAct);
 
     logoutAct->setEnabled(false);
 }
@@ -37,6 +38,8 @@ void MainWindow::createMenus()
 void MainWindow::showEvent(QShowEvent *event) {
     QMainWindow::showEvent( event );
 
+    mMode = MODE_NA;
+    onUpdateUi();
     QTimer::singleShot(50, this, SLOT(login()));
 }
 
@@ -61,6 +64,10 @@ void MainWindow::createActions()
     //loginAct->setShortcuts(QKeySequence::Login);
     logoutAct->setStatusTip(tr("Logout"));
     connect(logoutAct, &QAction::triggered, this, &MainWindow::logout);
+
+    retryAct = new QAction(tr("&Retry"), this);
+    retryAct->setStatusTip(tr("Try again"));
+    connect(retryAct, &QAction::triggered, this, &MainWindow::retry);
 
 }
 
@@ -105,9 +112,16 @@ void MainWindow::logout() {
         onUpdateUi();
      }
 }
+void MainWindow::retry() {
+    if (!mDone)
+        return;
+
+    onStart();
+    onUpdateUi();
+}
 
 void MainWindow::onEnterKey() {
-    if (mMode == MODE_NA)
+    if (mMode == MODE_NA || mDone)
         return;
     QString answer = ui->lineEditWord->text();
     if (answer.isEmpty())
@@ -120,22 +134,32 @@ void MainWindow::onEnterKey() {
     }
     if (ret == RC_CORRECT || ret == RC_SKIP) {
         ret = classRoom->present();
+        ui->progressBar->setValue(classRoom->getProgress());
         if (ret == RC_FINISHED_ALL) {
+            mDone = true;
+            if (mMode == MODE_QUIZ) {
+                retryAct->setEnabled(true);
+                showStats(ui->labelStats, classRoom->getStatistic());
+            }
+            else if (mMode == MODE_PLACE) {
+                retryAct->setEnabled(true);
+                showPlaceResult(ui->labelStats, classRoom->getFinishedGrade());
+            }
         }
     }
 }
 
 void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, int&mode) {
     mMode = mode;
+    mDone = false;
     if (mMode != MODE_NA) {
         mUsername = username;
         mGrade = grade;
-        mDictionary = QString::asprintf("%s/%s/%s", szApplicationDir, FOLDER_DICT, dictionary.toStdString().c_str());
-
+        mDictionary = dictionary;
+        if (mMode == MODE_PLACE)
+            mDictionary="SpellingBee2018.txt";
         classRoom = new ClassRoom(mUsername, mDictionary, mMode);
-        classRoom->prepare(mGrade);
-        QTimer::singleShot(50, classRoom, SLOT(present()));
-        ui->lineEditWord->setText("");
+        onStart();
     }
     onUpdateUi();
 }
@@ -172,15 +196,42 @@ void MainWindow::saveSettings() {
     settings.endGroup();
 }
 
+void MainWindow::onStart() {
+    mDone = false;
+
+    classRoom->prepare(mGrade);
+    ui->progressBar->setRange(0, classRoom->getTotalWordsSelected());
+    ui->progressBar->setValue(classRoom->getProgress());
+
+    QTimer::singleShot(50, classRoom, SLOT(present()));
+}
+
 void MainWindow::onUpdateUi() {
     loginAct->setEnabled(mMode == MODE_NA);
     logoutAct->setEnabled(mMode != MODE_NA);
+    retryAct->setEnabled(mDone && (mMode == MODE_QUIZ || mMode == MODE_PLACE));
 
-    QFileInfo fileInfo(mDictionary);
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);
-    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : fileInfo.fileName());
-    if (mMode == MODE_NA) {
-        ui->labelWordDetails->setText("");
-        ui->lineEditWord->setText("");
+    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : mDictionary);
+    ui->labelWordDetails->setText("");
+    ui->lineEditWord->setText("");
+    ui->labelStats->setText("");
+
+    ui->progressBar->setVisible((mMode == MODE_NA) ? false : true);
+}
+
+void MainWindow::showStats(QLabel *label, Statistics *stats) {
+    QString info = QString::asprintf("Total: %d, Correct: %d, Correct Percentage: %d%%", stats->getAsked(), stats->getCorrect(), stats->getCorrect() * 100 / stats->getAsked());
+    label->setText(info);
+}
+
+void MainWindow::showPlaceResult(QLabel *label, int finishedGrade) {
+    QString info;
+    if (finishedGrade <= 8) {
+        info = QString::asprintf("Your placement is grade %d.", finishedGrade);
     }
+    else {
+        info = "You passed all grades! You should go to the next list.";
+    }
+    label->setText(info);
 }

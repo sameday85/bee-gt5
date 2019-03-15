@@ -47,7 +47,7 @@ void Speaker::read_sentence_offline(QString sentence) {
         return;
 
     char command[512];
-    sprintf(command, "pico2wave -w sentence.wav \"%s\" && omxplayer sentence.wav >/dev/null", sentence.toStdString().c_str());
+    sprintf(command, "pico2wave -w /tmp/sentence.wav \"%s\" && omxplayer /tmp/sentence.wav >/dev/null", sentence.toStdString().c_str());
     system(command );
 }
 

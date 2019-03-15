@@ -8,6 +8,7 @@
 #include "common.h"
 #include "word.h"
 #include "speaker.h"
+#include "statistics.h"
 
 class ClassRoom : public QObject
 {
@@ -16,22 +17,34 @@ public:
     explicit ClassRoom(QString &username, QString& dictionary, int& mode);
     int prepare(int forGrade);
     void dismiss();
+    int getTotalWordsSelected();
+    int getProgress();
     Word* getCurrentWord();
+
+    Statistics *getStatisticLifetime();
+    Statistics *getStatistic();
+    int getFinishedGrade();
 
 private:
     void loadDictionary();
     void loadV10 (QTextStream &in);
     void loadV11 (QTextStream &in);
     void say(QString mp3);
+    void chooseWords(int max, bool random);
 
 private:
     Speaker speaker;
+    Statistics statsLifetime;
+    Statistics stats;
     QVector<Word> mWordList;
     Word currentWord;
     QString mUsername;
     QString mDictionary;
+    int mGrade;
     int mMode;
 
+    bool multipleGradeSupported;
+    bool started;
     int index[1024];
     int selectedTotal;
     int selected;

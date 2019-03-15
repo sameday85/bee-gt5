@@ -127,8 +127,8 @@ void LoginDialog::slotAcceptPlacement() {
 
 void LoginDialog::onUserLogin(int mode){
     QString dictionary = comboDictionary->currentText();
-    QString username = editUsername->text();
-    int grade = comboDictionary->currentIndex();
+    QString username = editUsername->text().trimmed();
+    int grade = comboGrade->currentIndex();
 
     emit acceptLogin( username, // current username
                       dictionary, // current dictionary

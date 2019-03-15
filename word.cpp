@@ -85,16 +85,29 @@ void Word::pronounceWord() {
     }
 }
 
-void Word::pronounceCategory() {
-    speaker.read_sentence_online(category);
+void Word::pronounceWordAlt() {
+    speaker.read_sentence_offline(word);
 }
 
-void Word::pronounceDefinition() {
-    speaker.read_sentence_online(definition);
+void Word::pronounceCategory(bool online) {
+    if (online)
+        speaker.read_sentence_online(category);
+    else
+        speaker.read_sentence_offline(category);
 }
 
-void Word::pronounceSample() {
-    speaker.read_sentence_online(sample);
+void Word::pronounceDefinition(bool online) {
+    if (online)
+        speaker.read_sentence_online(definition);
+    else
+        speaker.read_sentence_offline(definition);
+}
+
+void Word::pronounceSample(bool online) {
+    if (online)
+        speaker.read_sentence_online(sample);
+    else
+        speaker.read_sentence_offline(sample);
 }
 
 

@@ -1,63 +1,156 @@
 #include <QFile>
 #include "classroom.h"
-#
+
+#define PLACEMENT_CORRECT_PTG           80
+#define PLACEMENT_WORDS_EACH_GRADE      10
 
 ClassRoom::ClassRoom(QString &username, QString& dictionary, int& mode)
 {
     mUsername = username;
     mDictionary = dictionary;
     mMode = mode;
+
+    loadDictionary();
+    statsLifetime.load(mUsername);
 }
 
 int ClassRoom::prepare(int forGrade) {
-    loadDictionary();
+    started = false;
+    mGrade = forGrade;
+    if (!multipleGradeSupported)
+        mGrade = 0;
+    if (mMode == MODE_PLACE)
+        mGrade = 1;
     selectedTotal = 0;
-
     if (mWordList.isEmpty())
         return 0;
 
+    stats.reset();
     switch (mMode) {
     case MODE_PRACTICE:
-        for (int i = 0; i < mWordList.size(); ++i) {
-            if ((forGrade == 0) || (mWordList.at(i).getGrade() == 0) || (mWordList.at(i).getGrade() == forGrade)) {
-                index[selectedTotal++]=i;
-            }
-        }
+        chooseWords(0, false);
+        selected = statsLifetime.getWordIndexLastPracticed(mDictionary, mGrade);
         if (selected < 0 || selected >= selectedTotal)
             selected = 0;
         break;
+    case MODE_QUIZ:
+        chooseWords(0, true);
+        break;
+    case MODE_PLACE:
+        mGrade = 1;
+        chooseWords(PLACEMENT_WORDS_EACH_GRADE, true);
+        break;
     }
     return mWordList.size();
+}
+
+void ClassRoom::chooseWords(int max, bool random) {
+    for (int i = 0; i < mWordList.size(); ++i) {
+        if ((mGrade == 0) || (mWordList.at(i).getGrade() == 0) || (mWordList.at(i).getGrade() == mGrade)) {
+            index[selectedTotal++]=i;
+        }
+    }
+    if (max > 0 && selectedTotal > max)
+        selectedTotal = max;
+    if (random) {
+        for (int i = 0; i < selectedTotal; ++i) {
+            int pos1 = qrand() % selectedTotal;
+            int pos2 = qrand() % selectedTotal;
+
+            int tmp = index[pos1];
+            index[pos1]=index[pos2];
+            index[pos2]=tmp;
+        }
+    }
+    selected = 0;
+}
+
+Statistics *ClassRoom::getStatisticLifetime() {
+    return &statsLifetime;
+}
+
+Statistics *ClassRoom::getStatistic() {
+    return &stats;
 }
 
 Word* ClassRoom::getCurrentWord() {
     return &currentWord;
 }
 
+int ClassRoom::getTotalWordsSelected() {
+    return selectedTotal;
+}
+
+int ClassRoom::getFinishedGrade() {
+    return mGrade;
+}
+
+int ClassRoom::getProgress() {
+    return selected;
+}
+
 int ClassRoom::present() {
-    if (selected >= selectedTotal)
-        return RC_FINISHED_ALL;
-    int selection = index[selected++];
+    if (started) {
+        //move to next word
+        ++selected;
+    }
+    else {
+        started = true;
+    }
+    if (selected >= selectedTotal) {
+        if (mMode == MODE_PRACTICE)
+            selected = 0; //restart
+        else if (mMode == MODE_QUIZ)
+            return RC_FINISHED_ALL;
+        else if (mMode == MODE_PLACE) {
+            if (stats.getCorrectPercentage() < PLACEMENT_CORRECT_PTG)
+                return RC_FINISHED_ALL;
+            if (++mGrade <= 8) {
+                chooseWords(PLACEMENT_WORDS_EACH_GRADE, true);
+                stats.reset();
+            }
+            else {
+                return RC_FINISHED_ALL;
+            }
+        }
+    }
+    //repeat
+    selected = selected % selectedTotal;
+    int selection = index[selected];
     currentWord = mWordList.at(selection);
     currentWord.pronounceWord();
 
     failures = 0;
+    statsLifetime.incAsked();
+    stats.incAsked();
     return RC_OK;
 }
 
 int ClassRoom::onAnswer(QString answer) {
     int ret = RC_HELP;
     if (answer == "c") {
-        currentWord.pronounceCategory();
+        currentWord.pronounceCategory(true);
+    }
+    else if (answer == "c!") {
+        currentWord.pronounceCategory(false);
     }
     else if (answer == "d") {
-        currentWord.pronounceDefinition();
+        currentWord.pronounceDefinition(true);
+    }
+    else if (answer == "d!") {
+        currentWord.pronounceDefinition(false);
     }
     else if (answer == "s") {
-        currentWord.pronounceSample();
+        currentWord.pronounceSample(true);
+    }
+    else if (answer == "s!") {
+        currentWord.pronounceSample(false);
     }
     else if (answer == "r") {
         currentWord.pronounceWord();
+    }
+    else if (answer == "r!") {
+        currentWord.pronounceWordAlt();
     }
     else if (answer == "?") {
         ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
@@ -65,6 +158,10 @@ int ClassRoom::onAnswer(QString answer) {
     }
     else if (answer == currentWord.getSpelling()) {
         ret = RC_CORRECT;
+        if (failures <= 0) {
+            statsLifetime.incCorrect();
+            stats.incCorrect();
+        }
         say((failures <= 0) ? "perfect.wav" : "pass.wav");
     }
     else {
@@ -77,19 +174,25 @@ int ClassRoom::onAnswer(QString answer) {
 
 void ClassRoom::dismiss() {
     mWordList.clear();
+    if (mMode == MODE_PLACE)
+        statsLifetime.setWordIndexLastPracticed(mDictionary, mGrade, selected);
+    statsLifetime.save();
 }
 
 //load word list from given file
 void ClassRoom::loadDictionary () {
     mWordList.clear();
+    multipleGradeSupported = false;
 
-    QFile file(mDictionary);
+    QString fullPath = QString::asprintf("%s/%s/%s", szApplicationDir, FOLDER_DICT, mDictionary.toStdString().c_str());
+    QFile file(fullPath);
     if (!file.open(QIODevice::ReadOnly))
         return;
 
    QTextStream in(&file);
    QString line = in.readLine();
    if (line == "#Ver1.0") {
+       multipleGradeSupported = true;
        loadV10(in);
    }
    else if (line == "#Ver1.1") {
