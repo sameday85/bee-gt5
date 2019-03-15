@@ -55,7 +55,6 @@ void Speaker::read_sentence_offline(QString sentence) {
 QString Speaker::sanityCheck(QString sentence) {
     sentence = sentence.replace("'", "");
     sentence = sentence.replace("\"", "");
-    sentence = sentence.replace("'", "");
     sentence = sentence.replace("\\", "");
 
     return sentence;

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>SpellingBee.png</file>
+        <file>SpellingBee.svg</file>
+    </qresource>
+</RCC>

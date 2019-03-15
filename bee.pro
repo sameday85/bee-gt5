@@ -42,3 +42,6 @@ HEADERS  += mainwindow.h \
     statistics.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    images.qrc

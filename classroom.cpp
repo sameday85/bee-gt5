@@ -19,8 +19,6 @@ int ClassRoom::prepare(int forGrade) {
     mGrade = forGrade;
     if (!multipleGradeSupported)
         mGrade = 0;
-    if (mMode == MODE_PLACE)
-        mGrade = 1;
     selectedTotal = 0;
     if (mWordList.isEmpty())
         return 0;
@@ -45,6 +43,7 @@ int ClassRoom::prepare(int forGrade) {
 }
 
 void ClassRoom::chooseWords(int max, bool random) {
+    selectedTotal = selected = 0;
     for (int i = 0; i < mWordList.size(); ++i) {
         if ((mGrade == 0) || (mWordList.at(i).getGrade() == 0) || (mWordList.at(i).getGrade() == mGrade)) {
             index[selectedTotal++]=i;
@@ -62,7 +61,6 @@ void ClassRoom::chooseWords(int max, bool random) {
             index[pos2]=tmp;
         }
     }
-    selected = 0;
 }
 
 Statistics *ClassRoom::getStatisticLifetime() {
@@ -117,10 +115,7 @@ int ClassRoom::present() {
             }
         }
     }
-    //repeat
-    selected = selected % selectedTotal;
-    int selection = index[selected];
-    currentWord = mWordList.at(selection);
+    currentWord = mWordList.at(index[selected]);
     currentWord.pronounceWord();
 
     failures = 0;

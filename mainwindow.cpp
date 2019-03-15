@@ -21,17 +21,17 @@ MainWindow::MainWindow(QWidget *parent) :
              this,
              SLOT (onEnterKey())
              );
-
 }
 
 void MainWindow::createMenus()
 {
     userMenu = menuBar()->addMenu(tr("&User"));
     userMenu->addAction(loginAct);
-    userMenu->addAction(logoutAct);
     userMenu->addAction(retryAct);
+    userMenu->addSeparator();
+    userMenu->addAction(aboutAct);
 
-    logoutAct->setEnabled(false);
+    ui->mainToolBar->addAction(loginAct);
 }
 
 //https://stackoverflow.com/questions/14356121/how-to-call-function-after-window-is-shown
@@ -55,30 +55,37 @@ MainWindow::~MainWindow()
 
 void MainWindow::createActions()
 {
+    QIcon icon(":/SpellingBee.png");
     loginAct = new QAction(tr("Log&in"), this);
     //loginAct->setShortcuts(QKeySequence::Login);
     loginAct->setStatusTip(tr("User Login"));
-    connect(loginAct, &QAction::triggered, this, &MainWindow::login);
-
-    logoutAct = new QAction(tr("Log&out"), this);
-    //loginAct->setShortcuts(QKeySequence::Login);
-    logoutAct->setStatusTip(tr("Logout"));
-    connect(logoutAct, &QAction::triggered, this, &MainWindow::logout);
+    loginAct->setIcon(icon);
+    connect(loginAct, &QAction::triggered, this, &MainWindow::loginOrLogout);
 
     retryAct = new QAction(tr("&Retry"), this);
     retryAct->setStatusTip(tr("Try again"));
     connect(retryAct, &QAction::triggered, this, &MainWindow::retry);
 
+    aboutAct = new QAction(tr("About..."), this);
+    aboutAct->setStatusTip(tr("About Everyday Spelling Bee"));
+    connect(aboutAct, &QAction::triggered, this, &MainWindow::sayHello);
+
 }
 
 void MainWindow::sayHello() {
     QMessageBox msgBox;
-    msgBox.setText("Hello");
-    msgBox.setInformativeText("Do you want to save your changes?");
-    msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard |
-                              QMessageBox::Cancel);
-    msgBox.setDefaultButton(QMessageBox::Save);
+    //msgBox.setWindowTitle("About Everyday Spelling Bee");
+    msgBox.setText("Everyday Spelling Bee");
+    msgBox.setInformativeText("Version 1.0\r\nCopyright(c) 2019. All rights reserved");
+    msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.exec();
+}
+
+void MainWindow::loginOrLogout() {
+    if (mMode == MODE_NA)
+        login();
+    else
+        logout();
 }
 
 void MainWindow::login() {
@@ -207,8 +214,7 @@ void MainWindow::onStart() {
 }
 
 void MainWindow::onUpdateUi() {
-    loginAct->setEnabled(mMode == MODE_NA);
-    logoutAct->setEnabled(mMode != MODE_NA);
+    loginAct->setText(mMode == MODE_NA ? "Log&in" : "Log&out");
     retryAct->setEnabled(mDone && (mMode == MODE_QUIZ || mMode == MODE_PLACE));
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);

@@ -34,10 +34,11 @@ private:
 
     QMenu *userMenu;
     QAction *loginAct;
-    QAction *logoutAct;
     QAction *retryAct;
+    QAction *aboutAct;
 
 private slots:
+    void loginOrLogout();
     void login();
     void logout();
     void retry();
