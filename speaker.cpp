@@ -36,7 +36,7 @@ pico2wave -w sentence.wav "The jacket is red" && omxplayer sentence.wav >/dev/nu
 void Speaker::read_sentence_online(QString sentence) {
     if (sentence.isEmpty())
         return;
-
+    sentence = sanityCheck(sentence);
     char command[512];
     sprintf(command, "%s/speech.sh \"%s\"", szApplicationDir, sentence.toStdString().c_str());
     system(command );
@@ -46,8 +46,17 @@ void Speaker::read_sentence_offline(QString sentence) {
     if (sentence.isEmpty())
         return;
 
+    sentence = sanityCheck(sentence);
     char command[512];
     sprintf(command, "pico2wave -w /tmp/sentence.wav \"%s\" && omxplayer /tmp/sentence.wav >/dev/null", sentence.toStdString().c_str());
     system(command );
 }
 
+QString Speaker::sanityCheck(QString sentence) {
+    sentence = sentence.replace("'", "");
+    sentence = sentence.replace("\"", "");
+    sentence = sentence.replace("'", "");
+    sentence = sentence.replace("\\", "");
+
+    return sentence;
+}

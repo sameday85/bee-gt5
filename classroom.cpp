@@ -90,6 +90,9 @@ int ClassRoom::getProgress() {
 }
 
 int ClassRoom::present() {
+    if (mWordList.size() <= 0)
+        return RC_FINISHED_ALL;
+
     if (started) {
         //move to next word
         ++selected;
@@ -156,7 +159,7 @@ int ClassRoom::onAnswer(QString answer) {
         ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
         ++failures;
     }
-    else if (answer == currentWord.getSpelling()) {
+    else if (QString::compare(answer, currentWord.getSpelling(), Qt::CaseInsensitive) == 0) {
         ret = RC_CORRECT;
         if (failures <= 0) {
             statsLifetime.incCorrect();
@@ -174,7 +177,7 @@ int ClassRoom::onAnswer(QString answer) {
 
 void ClassRoom::dismiss() {
     mWordList.clear();
-    if (mMode == MODE_PLACE)
+    if (mMode == MODE_PRACTICE)
         statsLifetime.setWordIndexLastPracticed(mDictionary, mGrade, selected);
     statsLifetime.save();
 }

@@ -197,13 +197,13 @@ void MainWindow::saveSettings() {
 }
 
 void MainWindow::onStart() {
-    mDone = false;
-
-    classRoom->prepare(mGrade);
+    mDone = classRoom->prepare(mGrade) <= 0;
     ui->progressBar->setRange(0, classRoom->getTotalWordsSelected());
     ui->progressBar->setValue(classRoom->getProgress());
 
-    QTimer::singleShot(50, classRoom, SLOT(present()));
+    if (!mDone) {
+        QTimer::singleShot(50, classRoom, SLOT(present()));
+    }
 }
 
 void MainWindow::onUpdateUi() {

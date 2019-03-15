@@ -11,6 +11,9 @@ public:
     void play_online(QString url);
     void read_sentence_online(QString sentence);
     void read_sentence_offline(QString sentence);
+
+private:
+    QString sanityCheck(QString);
 };
 
 #endif // SPEAKER_H
