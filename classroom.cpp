@@ -1,4 +1,5 @@
 #include <QFile>
+#include <QXmlStreamReader>
 #include "classroom.h"
 
 #define PLACEMENT_CORRECT_PTG           80
@@ -45,7 +46,7 @@ int ClassRoom::prepare(int forGrade) {
 void ClassRoom::chooseWords(int max, bool random) {
     selectedTotal = selected = 0;
     for (int i = 0; i < mWordList.size(); ++i) {
-        if ((mGrade == 0) || (mWordList.at(i).getGrade() == 0) || (mWordList.at(i).getGrade() == mGrade)) {
+        if ((mGrade == 0) || (mWordList.at(i)->getGrade() == 0) || (mWordList.at(i)->getGrade() == mGrade)) {
             index[selectedTotal++]=i;
         }
     }
@@ -72,7 +73,7 @@ Statistics *ClassRoom::getStatistic() {
 }
 
 Word* ClassRoom::getCurrentWord() {
-    return &currentWord;
+    return currentWord;
 }
 
 int ClassRoom::getTotalWordsSelected() {
@@ -116,7 +117,7 @@ int ClassRoom::present() {
         }
     }
     currentWord = mWordList.at(index[selected]);
-    currentWord.pronounceWord();
+    currentWord->pronounceWord();
 
     failures = 0;
     statsLifetime.incAsked();
@@ -127,34 +128,34 @@ int ClassRoom::present() {
 int ClassRoom::onAnswer(QString answer) {
     int ret = RC_HELP;
     if (answer == "c") {
-        currentWord.pronounceCategory(true);
+        currentWord->pronounceCategory(true);
     }
     else if (answer == "c!") {
-        currentWord.pronounceCategory(false);
+        currentWord->pronounceCategory(false);
     }
     else if (answer == "d") {
-        currentWord.pronounceDefinition(true);
+        currentWord->pronounceDefinition(true);
     }
     else if (answer == "d!") {
-        currentWord.pronounceDefinition(false);
+        currentWord->pronounceDefinition(false);
     }
     else if (answer == "s") {
-        currentWord.pronounceSample(true);
+        currentWord->pronounceSample(true);
     }
     else if (answer == "s!") {
-        currentWord.pronounceSample(false);
+        currentWord->pronounceSample(false);
     }
     else if (answer == "r") {
-        currentWord.pronounceWord();
+        currentWord->pronounceWord();
     }
     else if (answer == "r!") {
-        currentWord.pronounceWordAlt();
+        currentWord->pronounceWordAlt();
     }
     else if (answer == "?") {
         ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
         ++failures;
     }
-    else if (QString::compare(answer, currentWord.getSpelling(), Qt::CaseInsensitive) == 0) {
+    else if (QString::compare(answer, currentWord->getSpelling(), Qt::CaseInsensitive) == 0) {
         ret = RC_CORRECT;
         if (failures <= 0) {
             statsLifetime.incCorrect();
@@ -171,6 +172,9 @@ int ClassRoom::onAnswer(QString answer) {
 }
 
 void ClassRoom::dismiss() {
+    currentWord = NULL;
+    for (int i = 0; i < mWordList.size(); ++i)
+        delete mWordList.at(i);
     mWordList.clear();
     if (mMode == MODE_PRACTICE)
         statsLifetime.setWordIndexLastPracticed(mDictionary, mGrade, selected);
@@ -187,90 +191,42 @@ void ClassRoom::loadDictionary () {
     if (!file.open(QIODevice::ReadOnly))
         return;
 
-   QTextStream in(&file);
-   QString line = in.readLine();
-   if (line == "#Ver1.0") {
-       multipleGradeSupported = true;
-       loadV10(in);
-   }
-   else if (line == "#Ver1.1") {
-       loadV11(in);
-   }
-   file.close();
-}
-
-void ClassRoom::loadV10 (QTextStream &in) {
-    QString line;
-    int grade = 1, word_sequence = 1;
-    while (!in.atEnd()) {
-        line = in.readLine();
-
-        QString tmp;
-        tmp.sprintf("%d.", word_sequence);
-        if (line == tmp) {
-            //skip the blank line
-            in.readLine();
-            //read the word
-            line = in.readLine();
-            Word word(line.trimmed());
-            word.setGrade(grade);
-
-            //skip blank line
-            in.readLine();
-            //read the class
-            line = in.readLine();
-            word.setCategory(line.trimmed());
-            //skip blank line
-            in.readLine();
-            //read the definition
-            line = in.readLine();
-            word.setDefinition(line.trimmed());
-            line = in.readLine();
-            if (!line.isEmpty()) {
-                word.setDefinition(word.getDefinition() + " " + line);
+    QXmlStreamReader *xmlReader = new QXmlStreamReader(&file);
+    //Parse the XML until we reach end of it
+    Word *ptrWord;
+    while(!xmlReader->atEnd() && !xmlReader->hasError()) {
+            // Read next element
+            QXmlStreamReader::TokenType token = xmlReader->readNext();
+            if(token == QXmlStreamReader::StartElement) {
+                if(xmlReader->name() == "word") {
+                    ptrWord = new Word();
+                    mWordList.append(ptrWord);
+                    foreach(const QXmlStreamAttribute &attr, xmlReader->attributes()) {
+                        if (attr.name().toString() == "grade") {
+                            ptrWord->setGrade(attr.value().toInt());
+                        }
+                    }
+                }
+                else if (xmlReader->name() == "spelling") {
+                    ptrWord->setSpelling(xmlReader->readElementText());
+                }
+                else if (xmlReader->name() == "category") {
+                    ptrWord->setCategory(xmlReader->readElementText());
+                }
+                else if (xmlReader->name() == "definitions") {
+                    ptrWord->setDefinition(xmlReader->readElementText());
+                }
+                else if (xmlReader->name() == "example") {
+                    ptrWord->setSample(xmlReader->readElementText());
+                }
+                else if (xmlReader->name() == "audio") {
+                    ptrWord->setAudio(xmlReader->readElementText());
+                }
             }
-
-            //set the sample sentence
-            line = "Sorry, sample sentence is not avaiable";
-            word.setSample(line);
-            mWordList.append(word);
-
-            if (word_sequence++ >= 100) {
-                word_sequence = 1;
-                ++grade;
-            }
-        }
     }
-}
+    delete xmlReader;
 
-void ClassRoom::loadV11 (QTextStream &in) {
-    QString line;
-    while (!in.atEnd()) {
-        line = in.readLine();
-        if (line.isEmpty())
-            break;
-        //word
-        Word word(line);
-        word.setGrade(0);
-
-        //category
-        line = in.readLine();
-        word.setCategory(line.trimmed());
-
-        //definition
-        line = in.readLine();
-        word.setDefinition(line.trimmed());
-        //example
-        line = in.readLine();
-        word.setSample(line.trimmed());
-        //audio
-        line = in.readLine();
-        word.setAudio(line.trimmed());
-        //skip blank line
-        in.readLine();
-
-        mWordList.append(word);
-    }
+    file.close();
 }
 
 void ClassRoom::say(QString mp3) {

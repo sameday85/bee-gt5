@@ -7,6 +7,8 @@
 #include "common.h"
 #include "logindialog.h"
 
+#define DEFAULT_DICT        "2018.xml"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -91,7 +93,7 @@ void MainWindow::loginOrLogout() {
 void MainWindow::login() {
     QString dictPath=QString::asprintf("%s/%s", szApplicationDir, FOLDER_DICT);
     QDir directory(dictPath);
-    QStringList dictionaryList = directory.entryList(QStringList() << "*.txt", QDir::Files);
+    QStringList dictionaryList = directory.entryList(QStringList() << "*.xml", QDir::Files);
 
     LoginDialog* loginDialog = new LoginDialog( this );
     loginDialog->setDictionaryList(dictionaryList);
@@ -164,7 +166,7 @@ void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, 
         mGrade = grade;
         mDictionary = dictionary;
         if (mMode == MODE_PLACE)
-            mDictionary="SpellingBee2018.txt";
+            mDictionary=DEFAULT_DICT;
         classRoom = new ClassRoom(mUsername, mDictionary, mMode);
         onStart();
     }

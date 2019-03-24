@@ -14,6 +14,10 @@ Word::Word(QString _word)
     word = _word;
 }
 
+void Word::setSpelling(QString _word) {
+    word = _word;
+}
+
 void Word::setCategory(QString _category) {
     category = _category;
 }

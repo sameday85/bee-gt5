@@ -27,8 +27,6 @@ public:
 
 private:
     void loadDictionary();
-    void loadV10 (QTextStream &in);
-    void loadV11 (QTextStream &in);
     void say(QString mp3);
     void chooseWords(int max, bool random);
 
@@ -36,8 +34,8 @@ private:
     Speaker speaker;
     Statistics statsLifetime;
     Statistics stats;
-    QVector<Word> mWordList;
-    Word currentWord;
+    QVector<Word*> mWordList;
+    Word *currentWord;
     QString mUsername;
     QString mDictionary;
     int mGrade;

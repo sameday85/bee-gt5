@@ -11,6 +11,7 @@ public:
     Word();
     Word(QString _word);
 
+    void setSpelling(QString _word);
     void setCategory(QString _category);
     void setDefinition(QString _definition);
     void setSample(QString _sample);
