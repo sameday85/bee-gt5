@@ -51,7 +51,8 @@ private:
     QString mDictionary;
     QString mUsername;
     int mGrade, mMode;
-    bool mDone;
+    bool mDone, mAutoPopup;
+
 
     void loadSettings();
     void saveSettings();

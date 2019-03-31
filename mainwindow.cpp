@@ -24,6 +24,9 @@ MainWindow::MainWindow(QWidget *parent) :
              this,
              SLOT (onEnterKey())
              );
+
+    mAutoPopup = false;
+    mMode = MODE_NA;
 }
 
 void MainWindow::createMenus()
@@ -42,9 +45,11 @@ void MainWindow::createMenus()
 void MainWindow::showEvent(QShowEvent *event) {
     QMainWindow::showEvent( event );
 
-    mMode = MODE_NA;
     onUpdateUi();
-    QTimer::singleShot(50, this, SLOT(login()));
+    if (!mAutoPopup) {
+        mAutoPopup = true;
+        QTimer::singleShot(50, this, SLOT(login()));
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -80,11 +85,16 @@ void MainWindow::createActions()
 }
 
 void MainWindow::sayHello() {
-    QMessageBox msgBox;
-    //msgBox.setWindowTitle("About Everyday Spelling Bee");
+    QMessageBox msgBox(this);
+    msgBox.setWindowTitle("About Everyday Spelling Bee");
     msgBox.setText("Everyday Spelling Bee");
-    msgBox.setInformativeText("Version 1.0\r\nCopyright(c) 2019. All rights reserved");
+    msgBox.setInformativeText("Version 1.0.0\r\nCopyright(c) 2019. All rights reserved.");
     msgBox.setStandardButtons(QMessageBox::Ok);
+
+    QGridLayout* layout = (QGridLayout*)msgBox.layout();
+    QSpacerItem* horizontalSpacer = new QSpacerItem(460, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
+
     msgBox.exec();
 }
 
