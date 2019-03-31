@@ -36,12 +36,14 @@ private:
     QAction *loginAct;
     QAction *retryAct;
     QAction *aboutAct;
+    QAction *statsAct;
 
 private slots:
     void loginOrLogout();
     void login();
     void logout();
     void retry();
+    void viewStatistics();
     void onEnterKey();
 
 private:

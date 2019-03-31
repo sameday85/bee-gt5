@@ -6,6 +6,7 @@
 #include <qtimer.h>
 #include "common.h"
 #include "logindialog.h"
+#include "statisticsdialog.h"
 
 #define DEFAULT_DICT        "2018.xml"
 
@@ -29,6 +30,7 @@ void MainWindow::createMenus()
 {
     userMenu = menuBar()->addMenu(tr("&User"));
     userMenu->addAction(loginAct);
+    userMenu->addAction(statsAct);
     userMenu->addAction(retryAct);
     userMenu->addSeparator();
     userMenu->addAction(aboutAct);
@@ -58,11 +60,15 @@ MainWindow::~MainWindow()
 void MainWindow::createActions()
 {
     QIcon icon(":/SpellingBee.png");
-    loginAct = new QAction(tr("Log&in"), this);
+    loginAct = new QAction(tr("Log&in..."), this);
     //loginAct->setShortcuts(QKeySequence::Login);
-    loginAct->setStatusTip(tr("User Login"));
+    loginAct->setStatusTip(tr("User Login/Logout"));
     loginAct->setIcon(icon);
     connect(loginAct, &QAction::triggered, this, &MainWindow::loginOrLogout);
+
+    statsAct = new QAction(tr("&Statistics..."), this);
+    statsAct->setStatusTip(tr("Statistics"));
+    connect(statsAct, &QAction::triggered, this, &MainWindow::viewStatistics);
 
     retryAct = new QAction(tr("&Retry"), this);
     retryAct->setStatusTip(tr("Try again"));
@@ -71,7 +77,6 @@ void MainWindow::createActions()
     aboutAct = new QAction(tr("About..."), this);
     aboutAct->setStatusTip(tr("About Everyday Spelling Bee"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::sayHello);
-
 }
 
 void MainWindow::sayHello() {
@@ -108,6 +113,14 @@ void MainWindow::login() {
     loginDialog->exec();
 }
 
+void MainWindow::viewStatistics() {
+    if ((mMode == MODE_NA) || (classRoom == NULL))
+        return;
+
+    StatisticsDialog* statsDialog = new StatisticsDialog( this, classRoom->getStatistic(), classRoom->getStatisticLifetime());
+    statsDialog->exec();
+}
+
 void MainWindow::logout() {
     if (classRoom) {
         classRoom->dismiss();
@@ -121,6 +134,7 @@ void MainWindow::logout() {
         onUpdateUi();
      }
 }
+
 void MainWindow::retry() {
     if (!mDone)
         return;
@@ -216,7 +230,8 @@ void MainWindow::onStart() {
 }
 
 void MainWindow::onUpdateUi() {
-    loginAct->setText(mMode == MODE_NA ? "Log&in" : "Log&out");
+    loginAct->setText(mMode == MODE_NA ? "Log&in..." : "Log&out");
+    statsAct->setEnabled(mMode != MODE_NA);
     retryAct->setEnabled(mDone && (mMode == MODE_QUIZ || mMode == MODE_PLACE));
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);

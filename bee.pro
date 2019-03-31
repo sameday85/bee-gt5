@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core network gui
+QT       += core network gui charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -30,7 +30,8 @@ SOURCES += main.cpp\
     word.cpp \
     urlconnection.cpp \
     speaker.cpp \
-    statistics.cpp
+    statistics.cpp \
+    statisticsdialog.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
@@ -39,7 +40,8 @@ HEADERS  += mainwindow.h \
     word.h \
     urlconnection.h \
     speaker.h \
-    statistics.h
+    statistics.h \
+    statisticsdialog.h
 
 FORMS    += mainwindow.ui
 
