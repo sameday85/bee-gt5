@@ -231,5 +231,5 @@ void ClassRoom::loadDictionary () {
 
 void ClassRoom::say(QString mp3) {
     QString path = QString::asprintf("%s/%s", szApplicationDir, mp3.toStdString().c_str());
-    speaker.play(path);
+    speaker.play_offline(path);
 }

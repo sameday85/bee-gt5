@@ -75,7 +75,7 @@ void MainWindow::createActions()
     statsAct->setStatusTip(tr("Statistics"));
     connect(statsAct, &QAction::triggered, this, &MainWindow::viewStatistics);
 
-    retryAct = new QAction(tr("&Retry"), this);
+    retryAct = new QAction(tr("&Restart"), this);
     retryAct->setStatusTip(tr("Try again"));
     connect(retryAct, &QAction::triggered, this, &MainWindow::retry);
 
@@ -154,29 +154,33 @@ void MainWindow::retry() {
 }
 
 void MainWindow::onEnterKey() {
-    if (mMode == MODE_NA || mDone)
-        return;
     QString answer = ui->lineEditWord->text();
     if (answer.isEmpty())
         return;
     ui->lineEditWord->setText("");
-    int ret = classRoom->onAnswer(answer);
-    if (ret == RC_RETRY || ret == RC_SKIP) {
-        Word *word = classRoom->getCurrentWord();
-        ui->labelWordDetails->setText(word->getSpelling()+": "+word->getCategory() + ", " + word->getDefinition());
+    if (mMode == MODE_NA || mDone) {
+        Speaker speaker;
+        speaker.read_sentence_online(answer);
     }
-    if (ret == RC_CORRECT || ret == RC_SKIP) {
-        ret = classRoom->present();
-        ui->progressBar->setValue(classRoom->getProgress());
-        if (ret == RC_FINISHED_ALL) {
-            mDone = true;
-            if (mMode == MODE_QUIZ) {
-                retryAct->setEnabled(true);
-                showStats(ui->labelStats, classRoom->getStatistic());
-            }
-            else if (mMode == MODE_PLACE) {
-                retryAct->setEnabled(true);
-                showPlaceResult(ui->labelStats, classRoom->getFinishedGrade());
+    else {
+        int ret = classRoom->onAnswer(answer);
+        if (ret == RC_RETRY || ret == RC_SKIP) {
+            Word *word = classRoom->getCurrentWord();
+            ui->labelWordDetails->setText(word->getSpelling()+": "+word->getCategory() + ", " + word->getDefinition());
+        }
+        if (ret == RC_CORRECT || ret == RC_SKIP) {
+            ret = classRoom->present();
+            ui->progressBar->setValue(classRoom->getProgress());
+            if (ret == RC_FINISHED_ALL) {
+                mDone = true;
+                if (mMode == MODE_QUIZ) {
+                    retryAct->setEnabled(true);
+                    showStats(ui->labelStats, classRoom->getStatistic());
+                }
+                else if (mMode == MODE_PLACE) {
+                    retryAct->setEnabled(true);
+                    showPlaceResult(ui->labelStats, classRoom->getFinishedGrade());
+                }
             }
         }
     }

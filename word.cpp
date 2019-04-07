@@ -73,7 +73,7 @@ void Word::pronounceWord() {
         if (urlConnection.download2File(url, voice)) {
             mp3_available = true;
         }
-        else if (download_soundoftext(word, voice)) {
+        else if (speaker.download_soundoftext(word, voice)) {
             mp3_available = true;
         }
     }
@@ -82,7 +82,7 @@ void Word::pronounceWord() {
     }
 
     if (mp3_available) {
-        speaker.play(voice);
+        speaker.play_offline(voice);
     }
     else {
         speaker.play_online(url);
@@ -115,47 +115,4 @@ void Word::pronounceSample(bool online) {
 }
 
 
-QString Word::parse_json(QString json, QString tag) {
-    QString value;
-
-    int pos = json.indexOf(tag);
-    if (pos >= 0) {
-        pos += tag.length();
-        int pos1 = json.indexOf("\"", pos) + 1;
-        int pos2 = json.indexOf("\"", pos1);
-        value = json.mid(pos1, pos2 - pos1);
-    }
-
-    return value;
-}
-
-bool Word::download_soundoftext(QString word_or_sentence, QString filename) {
-    QString data = QString::asprintf("{\r\n\"engine\": \"Google\",\r\n\"data\": {\r\n\"text\": \"%s\",\r\n\"voice\": \"en-US\"}\r\n}\r\n", word_or_sentence.toStdString().c_str());
-
-    QString url = "https://api.soundoftext.com/sounds";
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    UrlConnection urlConnection;
-    QNetworkReply *reply = urlConnection.doPost(request, data.toUtf8());
-    QString response = urlConnection.isError() ? "" : urlConnection.saveToString(reply);
-
-    QString value = parse_json(response, "\"id\"");
-    if (value.isEmpty())
-        return false;
-
-    QString url2 = QString::asprintf("https://api.soundoftext.com/sounds/%s", value.toStdString().c_str());
-    response = urlConnection.download2String(url2);
-    int wait = 4; //4 seconds
-    value = parse_json(response, "\"location\"");
-    while (value.isEmpty()) {
-        if (--wait < 0)
-            break;
-        QThread::sleep(1);//seconds
-        response = urlConnection.download2String(url2);
-    }
-    if (value.isEmpty())
-        return false;
-    return urlConnection.download2File(value, filename);
-}
 

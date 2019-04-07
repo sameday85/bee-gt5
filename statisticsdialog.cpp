@@ -1,4 +1,5 @@
 #include "statisticsdialog.h"
+#include "QLabel"
 #include <QGridLayout>
 #include <QtCharts/QChartView>
 #include <QtCharts/QPieSeries>
@@ -36,7 +37,7 @@ void StatisticsDialog::setUpGUI() {
         series->append("Failed", stats->getAsked() - stats->getCorrect());
         {
             QPieSlice *slice = series->slices().at(0);
-            slice->setBrush(Qt::blue);
+            slice->setBrush(Qt::green);
         }
         {
             QPieSlice *slice = series->slices().at(1);
@@ -51,6 +52,9 @@ void StatisticsDialog::setUpGUI() {
         chartView->setRenderHint(QPainter::Antialiasing);
 
         formGridLayout->addWidget(chartView, 0, 0);
+        QLabel *label = new QLabel (this);
+        label->setText(QString::asprintf("%d of %d", stats->getCorrect(), stats->getAsked()));
+        formGridLayout->addWidget(label, 1, 0, Qt::AlignCenter);
     }
     //lifetime statistics
     {
@@ -59,7 +63,7 @@ void StatisticsDialog::setUpGUI() {
         series->append("Failed", lifetimeStats->getAsked() - lifetimeStats->getCorrect());
         {
             QPieSlice *slice = series->slices().at(0);
-            slice->setBrush(Qt::blue);
+            slice->setBrush(Qt::green);
         }
         {
             QPieSlice *slice = series->slices().at(1);
@@ -67,13 +71,16 @@ void StatisticsDialog::setUpGUI() {
         }
         QChart *chart = new QChart();
         chart->addSeries(series);
-        chart->setTitle("Lifetime");
+        chart->setTitle("History");
         chart->legend()->hide();
 
         QChartView *chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
 
         formGridLayout->addWidget(chartView, 0, 1);
+        QLabel *label = new QLabel (this);
+        label->setText(QString::asprintf("%d of %d", lifetimeStats->getCorrect(), lifetimeStats->getAsked()));
+        formGridLayout->addWidget(label, 1, 1, Qt::AlignCenter);
     }
 
     buttons = new QDialogButtonBox( this );
@@ -85,7 +92,7 @@ void StatisticsDialog::setUpGUI() {
              SLOT (slotOnOk()) );
 
     //addWidget(QWidget * widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = 0)
-    formGridLayout->addWidget(buttons, 1, 0, 1, 2 );
+    formGridLayout->addWidget(buttons, 2, 0, 1, 2 );
 
     setLayout( formGridLayout );
 }

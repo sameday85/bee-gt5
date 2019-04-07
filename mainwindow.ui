@@ -115,7 +115,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Word</string>
+         <string>Enter the word spelling</string>
         </property>
        </widget>
       </item>

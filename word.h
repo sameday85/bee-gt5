@@ -27,9 +27,6 @@ private:
     QString sample;
     QString audio;
 
-    QString parse_json(QString json, QString tag);
-    bool download_soundoftext(QString word_or_sentence, QString filename);
-
 public:
     int getGrade() const;
     QString getSpelling();
