@@ -78,6 +78,9 @@
      </widget>
     </item>
     <item>
+     <widget class="QTextEdit" name="textEdit"/>
+    </item>
+    <item>
      <spacer name="verticalSpacer_2">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -89,13 +92,6 @@
        </size>
       </property>
      </spacer>
-    </item>
-    <item>
-     <widget class="QLabel" name="labelWordDetails">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
     </item>
     <item>
      <widget class="QProgressBar" name="progressBar">

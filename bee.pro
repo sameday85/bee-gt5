@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     urlconnection.cpp \
     speaker.cpp \
     statistics.cpp \
-    statisticsdialog.cpp
+    statisticsdialog.cpp \
+    dicthelper.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     urlconnection.h \
     speaker.h \
     statistics.h \
-    statisticsdialog.h
+    statisticsdialog.h \
+    dicthelper.h
 
 FORMS    += mainwindow.ui
 

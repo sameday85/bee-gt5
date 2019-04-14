@@ -7,6 +7,7 @@
 #include "common.h"
 #include "logindialog.h"
 #include "statisticsdialog.h"
+#include "dicthelper.h"
 
 #define DEFAULT_DICT        "2018.xml"
 
@@ -47,6 +48,7 @@ void MainWindow::showEvent(QShowEvent *event) {
     QMainWindow::showEvent( event );
 
     onUpdateUi();
+    ui->textEdit->setReadOnly(true);
     if (!mAutoPopup) {
         mAutoPopup = true;
         QTimer::singleShot(50, this, SLOT(login()));
@@ -162,14 +164,12 @@ void MainWindow::onEnterKey() {
         return;
     ui->lineEditWord->setText("");
     if (mMode == MODE_NA || mDone) {
-        Speaker speaker;
-        speaker.read_sentence_online(answer);
+        lookup(answer);
     }
     else {
         int ret = classRoom->onAnswer(answer);
         if (ret == RC_RETRY || ret == RC_SKIP) {
-            Word *word = classRoom->getCurrentWord();
-            ui->labelWordDetails->setText(word->getSpelling()+": "+word->getCategory() + ", " + word->getDefinition());
+            showWord(classRoom->getCurrentWord());
         }
         if (ret == RC_CORRECT || ret == RC_SKIP) {
             ret = classRoom->present();
@@ -253,7 +253,6 @@ void MainWindow::onUpdateUi() {
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);
     ui->labelDictionary->setText((mMode == MODE_NA) ? "" : mDictionary);
-    ui->labelWordDetails->setText("");
     ui->lineEditWord->setText("");
     ui->labelStats->setText("");
 
@@ -274,4 +273,37 @@ void MainWindow::showPlaceResult(QLabel *label, int finishedGrade) {
         info = "You passed all grades! You should go to the next list.";
     }
     label->setText(info);
+}
+
+void MainWindow::lookup(QString spelling) {
+    DictHelper helper(spelling);
+    helper.download();
+    Word word(spelling);
+    word.setCategory(helper.getCategory());
+    word.setDefinition(helper.getDefinitions());
+    word.setSample(helper.getExample());
+    word.setAudio(helper.getAudio());
+    showWord(&word);
+
+    Speaker speaker;
+    speaker.read_sentence_online(spelling);
+}
+
+void MainWindow::showWord(Word *word) {
+    QString spelling = word->getSpelling();
+    if (!spelling.isEmpty()) {
+        spelling.replace(0, 1, spelling[0].toUpper());
+    }
+    QString category = word->getCategory();
+    int pos1 = category.indexOf("(");
+    int pos2 = category.indexOf(")");
+    if (pos2 > pos1 && pos1 >= 0)
+        category = category.mid(pos1+1, pos2-pos1-1);
+
+    QString openingTag="<p>", closingTag="</p>";
+    QString content = "<h1>" + spelling + "</h1>";
+    content += openingTag + category + closingTag;
+    content += openingTag + word->getDefinition() + closingTag;
+    content += openingTag + + "<i>" + word->getSample() + + "</i>" + closingTag;
+    ui->textEdit->setText(content);
 }

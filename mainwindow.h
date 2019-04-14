@@ -31,6 +31,8 @@ private:
 
     void createActions();
     void createMenus();
+    void lookup(QString word);
+    void showWord(Word *word);
 
     QMenu *userMenu;
     QAction *loginAct;
