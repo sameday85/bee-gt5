@@ -2,12 +2,13 @@
 #define DICTHELPER_H
 
 #include <QString>
+#include "wordex.h"
 
 class DictHelper
 {
 public:
     DictHelper(QString word);
-    bool download();
+    WordEx* download();
 
     QString getCategory() const;
     QString getDefinitions() const;
@@ -15,12 +16,15 @@ public:
     QString getAudio() const;
 
 private:
-    QString mWord;
-    QString mCategory;
-    QString mDefinitions;
-    QString mExample;
-    QString mAudio;
+    QString mApiId;
+    QString mApiKey;
+    QString mApiBase;
 
+    QString mWord;
+
+    void loadCredentials();
+    bool downloadOnline(WordEx *);
+    bool downloadByApi(WordEx *);
     QString parseCategory(QString content);
     QString parseDefinitions(QString content, QString word);
     QString parseExample(QString content);

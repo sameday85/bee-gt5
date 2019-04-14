@@ -1,6 +1,8 @@
 #include "wordex.h"
 
-WordSense::WordSense() {
+WordSense::WordSense(QString definition, QString example) {
+    mDefinition = definition;
+    mExample = example;
 }
 
 QString WordSense::getDefinition() const
@@ -8,23 +10,15 @@ QString WordSense::getDefinition() const
     return mDefinition;
 }
 
-void WordSense::setDefinition(const QString &definition)
-{
-    mDefinition = definition;
-}
-
 QString WordSense::getExample() const
 {
     return mExample;
 }
 
-void WordSense::setExample(const QString &example)
-{
-    mExample = example;
-}
 //=========================================================
-WordCategory::WordCategory(QString category) {
+WordCategory::WordCategory(QString category, QString audio) {
     mCategory = category;
+    mAudio = audio;
 }
 
 WordCategory::~WordCategory() {
@@ -34,10 +28,10 @@ WordCategory::~WordCategory() {
 }
 
 void WordCategory::addSense(WordSense *sense) {
-    senses.add(sense);
+    senses.append(sense);
 }
 
-QArray<WordSense*> *WordCategory::getSenses() {
+QList<WordSense*> *WordCategory::getSenses() {
     return &senses;
 }
 
@@ -51,10 +45,6 @@ QString WordCategory::getAudio() const
     return mAudio;
 }
 
-void WordCategory::setAudio(const QString &audio)
-{
-    mAudio = audio;
-}
 //======================================================
 WordEx::WordEx(QString _word) {
     mSpelling = _word;
@@ -66,8 +56,12 @@ WordEx::~WordEx() {
     categories.clear();
 }
 
+QString WordEx::getSpelling() {
+    return mSpelling;
+}
+
 void WordEx::addCategory(WordCategory *category) {
-    categories.add(category);
+    categories.append(category);
 }
 
 QList<WordCategory *> *WordEx::getCategories() {

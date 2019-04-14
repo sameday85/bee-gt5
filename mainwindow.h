@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include "classroom.h"
 #include "statistics.h"
+#include "wordex.h"
 
 namespace Ui {
 class MainWindow;
@@ -33,6 +34,7 @@ private:
     void createMenus();
     void lookup(QString word);
     void showWord(Word *word);
+    void showWordEx(WordEx *word);
 
     QMenu *userMenu;
     QAction *loginAct;
@@ -60,6 +62,7 @@ private:
     void saveSettings();
     void onStart();
     void onUpdateUi();
+    void showHelp();
     void showStats(QLabel *label, Statistics *stats);
     void showPlaceResult(QLabel *label, int finishedGrade);
 };

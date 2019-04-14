@@ -51,6 +51,7 @@ void MainWindow::showEvent(QShowEvent *event) {
     ui->textEdit->setReadOnly(true);
     if (!mAutoPopup) {
         mAutoPopup = true;
+        showHelp();
         QTimer::singleShot(50, this, SLOT(login()));
     }
 }
@@ -257,6 +258,7 @@ void MainWindow::onUpdateUi() {
     ui->labelStats->setText("");
 
     ui->progressBar->setVisible((mMode == MODE_NA) ? false : true);
+    ui->textEdit->setText("");
 }
 
 void MainWindow::showStats(QLabel *label, Statistics *stats) {
@@ -277,16 +279,21 @@ void MainWindow::showPlaceResult(QLabel *label, int finishedGrade) {
 
 void MainWindow::lookup(QString spelling) {
     DictHelper helper(spelling);
-    helper.download();
-    Word word(spelling);
-    word.setCategory(helper.getCategory());
-    word.setDefinition(helper.getDefinitions());
-    word.setSample(helper.getExample());
-    word.setAudio(helper.getAudio());
-    showWord(&word);
-
+    WordEx *theWord = helper.download();
+    if (theWord) {
+        showWordEx(theWord);
+        delete theWord;
+    }
+    else {
+        ui->textEdit->setText(spelling);
+    }
     Speaker speaker;
     speaker.read_sentence_online(spelling);
+}
+
+void MainWindow::showHelp() {
+    //QString help = "c-category,d-definition, s-sample sentence, r-read again";
+    //ui->textEdit->setText(help);
 }
 
 void MainWindow::showWord(Word *word) {
@@ -305,5 +312,27 @@ void MainWindow::showWord(Word *word) {
     content += openingTag + category + closingTag;
     content += openingTag + word->getDefinition() + closingTag;
     content += openingTag + + "<i>" + word->getSample() + + "</i>" + closingTag;
+    ui->textEdit->setText(content);
+}
+
+void MainWindow::showWordEx(WordEx *word) {
+    QString spelling = word->getSpelling();
+    if (!spelling.isEmpty()) {
+        spelling.replace(0, 1, spelling[0].toUpper());
+    }
+
+    QString openingTag="<p>", closingTag="</p>";
+    QString content = "<h1>" + spelling + "</h1>";
+    QList<WordCategory *>*categories = word->getCategories();
+    for (int i = 0; i < categories->count(); ++i) {
+        content += openingTag + "<font color='orange'>" + categories->at(i)->getCategory() + +"</font>" + closingTag;
+        QList<WordSense*>* senses = categories->at(i)->getSenses();
+        for (int j = 0; j < senses->count(); ++j) {
+            WordSense *sense = senses->at(j);
+            content += openingTag + QString::number(j+1) + ". " + sense->getDefinition() + closingTag;
+            if (!sense->getExample().isEmpty())
+                content += openingTag + "<i>'" + sense->getExample() + "'</i>" + closingTag;
+        }
+    }
     ui->textEdit->setText(content);
 }

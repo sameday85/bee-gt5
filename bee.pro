@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     speaker.cpp \
     statistics.cpp \
     statisticsdialog.cpp \
-    dicthelper.cpp
+    dicthelper.cpp \
+    wordex.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
@@ -43,7 +44,8 @@ HEADERS  += mainwindow.h \
     speaker.h \
     statistics.h \
     statisticsdialog.h \
-    dicthelper.h
+    dicthelper.h \
+    wordex.h
 
 FORMS    += mainwindow.ui
 

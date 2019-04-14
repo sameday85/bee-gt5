@@ -1,15 +1,14 @@
 #ifndef WORDEX_H
 #define WORDEX_H
 
+#include <QString>
+#include <QList>
+
 class WordSense {
 public:
-    WordSense();
+    WordSense(QString definition, QString example);
     QString getDefinition() const;
-    void setDefinition(const QString &definition);
-
     QString getExample() const;
-    void setExample(const QString &example);
-
 private:
     QString mDefinition;
     QString mExample;
@@ -18,20 +17,18 @@ private:
 
 class WordCategory {
 public:
-    WordCategory(QString category);
+    WordCategory(QString category, QString audio);
     ~WordCategory();
     void addSense(WordSense * sense);
 
     QString getCategory() const;
-
     QString getAudio() const;
-    void setAudio(const QString &audio);
-    QArray<WordSense*> *getSenses();
+    QList<WordSense*> *getSenses();
 
 private:
     QString mCategory;
     QString mAudio;
-    QArray<WordSense*> senses;
+    QList<WordSense*> senses;
 };
 
 class WordEx
@@ -39,6 +36,7 @@ class WordEx
 public:
     WordEx(QString _word);
     ~WordEx();
+    QString getSpelling();
     void addCategory(WordCategory *category);
     QList<WordCategory *> *getCategories();
 

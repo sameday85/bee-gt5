@@ -1,12 +1,118 @@
 #include <QStringList>
 #include "urlconnection.h"
 #include "dicthelper.h"
+#include "common.h"
 
 DictHelper::DictHelper(QString word)
 {
     mWord = word;
 }
 
+void DictHelper::loadCredentials() {
+    QString fullPath = QString::asprintf("%s/oxford.txt", szApplicationDir);
+    QFile file(fullPath);
+    if (!file.open(QIODevice::ReadOnly))
+        return;
+
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+       QString line = in.readLine();
+       int pos = line.indexOf("=");
+       if (pos > 0) {
+           QString key = line.left(pos);
+           QString value = line.mid(pos+1).trimmed();
+           if (key == "id") {
+               mApiId = value;
+           }
+           else if (key == "key") {
+               mApiKey = value;
+           }
+           else if (key == "base") {
+               mApiBase = value;
+           }
+       }
+   }
+   file.close();
+}
+
+WordEx * DictHelper::download() {
+    if (mWord.isEmpty())
+        return nullptr;
+    WordEx *theWord = new WordEx(mWord);
+    this->loadCredentials();
+    if (!mApiKey.isEmpty() && !mApiId.isEmpty())
+        if (downloadByApi(theWord))
+            return theWord;
+    downloadOnline(theWord);
+    return theWord;
+}
+
+bool DictHelper::downloadByApi(WordEx *word) {
+    //sprintf(message, "GET /api/v1/entries/en/%s HTTP/1.1\r\nHost: od-api.oxforddictionaries.com\r\nConnection: close\r\nAccept: application/json\r\napp_id: %s\r\napp_key: %s\r\n\r\n", word, szApiId, szApiKey);
+    QString url = mApiBase + "/entries/en/" + mWord;
+    QNetworkRequest request(url);
+    request.setRawHeader("Accept", "application/json");
+    request.setRawHeader(QString("app_id").toUtf8(), mApiId.toUtf8());
+    request.setRawHeader(QString("app_key").toUtf8(), mApiKey.toUtf8());
+    UrlConnection urlConnection;
+    QNetworkReply *reply = urlConnection.doGet(request);
+    if (urlConnection.isError())
+        return false;
+    QString json = urlConnection.saveToString(reply);
+    if (json.indexOf("Authentication failed") >= 0)
+        return false;
+    QJsonDocument document = QJsonDocument::fromJson(json.toUtf8());
+    QJsonArray results = document.object().value("results").toArray();
+    for (int i = 0; i < results.count(); ++i) {
+        QJsonArray lexicalEntries = results.at(i).toObject().value("lexicalEntries").toArray();
+        for (int j = 0; j < lexicalEntries.count(); ++j) {
+            QString category = lexicalEntries.at(j).toObject().value("lexicalCategory").toString();
+            //pronunciations, array, audioFile
+            QString audio = lexicalEntries.at(j).toObject().value("pronunciations").toArray().at(0).toObject().value("audioFile").toString();
+            WordCategory *theCategory = new WordCategory(category, audio);
+            word->addCategory(theCategory);
+
+            QJsonArray entries = lexicalEntries.at(j).toObject().value("entries").toArray();
+            for (int m = 0; m < entries.count(); ++m) {
+                QJsonArray senses = entries.at(m).toObject().value("senses").toArray();
+                for (int n = 0; n < senses.count(); ++n) {
+                    //definitions, array
+                    QString definition = senses.at(n).toObject().value("definitions").toArray().at(0).toString();
+                    //examples, array
+                    QString example = senses.at(n).toObject().value("examples").toArray().at(0).toObject().value("text").toString();
+                    theCategory->addSense(new WordSense(definition, example));
+                }
+            }
+        }
+    }
+/*
+    QFile file("/tmp/word.json");
+    if (file.open(QIODevice::WriteOnly)) {
+        QTextStream out(&file);
+        out << json;
+        file.close();
+    }
+*/
+    return true;
+}
+
+bool DictHelper::downloadOnline(WordEx *word) {
+    QString url = QString::asprintf("https://en.oxforddictionaries.com/definition/us/%s", mWord.toStdString().c_str());
+    UrlConnection urlConnection;
+    QString page = urlConnection.download2String(url);
+    QString category = parseCategory(page);
+    QString definition = parseDefinitions(page, mWord);
+    QString example = parseExample(page);
+    QString audio = parseAudio(page);
+
+    if (category.isEmpty() && definition.isEmpty())
+        return false;
+    WordCategory *wordCategory = new WordCategory(category, audio);
+    wordCategory->addSense(new WordSense(definition, example));
+    word->addCategory(wordCategory);
+
+    return true;
+}
 
 QString DictHelper::parseCategory(QString content) {
     QString category = "";
@@ -69,36 +175,4 @@ QString DictHelper::parseAudio(QString content) {
     }
 
     return audio;
-}
-
-bool DictHelper::download() {
-    QString url = QString::asprintf("https://en.oxforddictionaries.com/definition/%s", mWord.toStdString().c_str());
-    UrlConnection urlConnection;
-    QString page = urlConnection.download2String(url);
-    mCategory = parseCategory(page);
-    mDefinitions = parseDefinitions(page, mWord);
-    mExample = parseExample(page);
-    mAudio = parseAudio(page);
-
-    return !mCategory.isEmpty() || !mDefinitions.isEmpty() || !mDefinitions.isEmpty();
-}
-
-QString DictHelper::getCategory() const
-{
-    return mCategory;
-}
-
-QString DictHelper::getDefinitions() const
-{
-    return mDefinitions;
-}
-
-QString DictHelper::getExample() const
-{
-    return mExample;
-}
-
-QString DictHelper::getAudio() const
-{
-    return mAudio;
 }
