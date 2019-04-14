@@ -11,7 +11,7 @@ class StatisticsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit StatisticsDialog(QWidget* parent, Statistics *stats_, Statistics *lifetimeStats_);
+    explicit StatisticsDialog(QWidget* parent, Statistics *stats_, Statistics *perDictionary_, Statistics *lifetimeStats_);
 
 private:
     void setUpGUI();
@@ -23,6 +23,7 @@ private:
     QDialogButtonBox *buttons;
 
     Statistics *stats;
+    Statistics *perDictionaryStats;
     Statistics *lifetimeStats;
 };
 

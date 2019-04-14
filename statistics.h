@@ -9,16 +9,18 @@ class Statistics
 {
 public:
     Statistics();
-    void load(QString user);
+    void loadHistoryStats(QString user);
+    void loadDictStats(QString user, QString dictionary);
     void save();
 
 private:
     QHash<QString, int> stats;
-
     QString statsFilePath;
-    QString mUsername;
 
     int asked, correct;
+private:
+    void load();
+
 public:
     int getWordIndexLastPracticed(QString dict, int grade);
     void setWordIndexLastPracticed(QString dict, int grade, int index);

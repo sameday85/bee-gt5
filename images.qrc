@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>SpellingBee.png</file>
         <file>SpellingBee.svg</file>
+        <file>piechart.png</file>
+        <file>piechart.svg</file>
     </qresource>
 </RCC>

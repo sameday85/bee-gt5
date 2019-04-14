@@ -22,6 +22,7 @@ public:
     Word* getCurrentWord();
 
     Statistics *getStatisticLifetime();
+    Statistics *getStatisticPerDicitionary();
     Statistics *getStatistic();
     int getFinishedGrade();
 
@@ -33,6 +34,7 @@ private:
 private:
     Speaker speaker;
     Statistics statsLifetime;
+    Statistics statsPerDictionary;
     Statistics stats;
     QVector<Word*> mWordList;
     Word *currentWord;
@@ -48,6 +50,7 @@ private:
     int selected;
 
     int failures;
+    bool tried;
 
 public slots:
     int present();

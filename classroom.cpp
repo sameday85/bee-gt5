@@ -12,11 +12,12 @@ ClassRoom::ClassRoom(QString &username, QString& dictionary, int& mode)
     mMode = mode;
 
     loadDictionary();
-    statsLifetime.load(mUsername);
+    statsLifetime.loadHistoryStats(mUsername);
+    statsPerDictionary.loadDictStats(mUsername, mDictionary);
 }
 
 int ClassRoom::prepare(int forGrade) {
-    started = false;
+    started = tried = false;
     mGrade = forGrade;
     if (!multipleGradeSupported)
         mGrade = 0;
@@ -66,6 +67,10 @@ void ClassRoom::chooseWords(int max, bool random) {
 
 Statistics *ClassRoom::getStatisticLifetime() {
     return &statsLifetime;
+}
+
+Statistics *ClassRoom::getStatisticPerDicitionary() {
+    return &statsPerDictionary;
 }
 
 Statistics *ClassRoom::getStatistic() {
@@ -119,14 +124,19 @@ int ClassRoom::present() {
     currentWord = mWordList.at(index[selected]);
     currentWord->pronounceWord();
 
-    failures = 0;
-    statsLifetime.incAsked();
-    stats.incAsked();
+    failures = 0; tried = false;
     return RC_OK;
 }
 
 int ClassRoom::onAnswer(QString answer) {
     int ret = RC_HELP;
+    if (!tried) {
+        tried = true;
+
+        statsLifetime.incAsked();
+        statsPerDictionary.incAsked();
+        stats.incAsked();
+    }
     if (answer == "c") {
         currentWord->pronounceCategory(true);
     }
@@ -159,6 +169,7 @@ int ClassRoom::onAnswer(QString answer) {
         ret = RC_CORRECT;
         if (failures <= 0) {
             statsLifetime.incCorrect();
+            statsPerDictionary.incCorrect();
             stats.incCorrect();
         }
         say((failures <= 0) ? "perfect.wav" : "pass.wav");
@@ -179,6 +190,7 @@ void ClassRoom::dismiss() {
     if (mMode == MODE_PRACTICE)
         statsLifetime.setWordIndexLastPracticed(mDictionary, mGrade, selected);
     statsLifetime.save();
+    statsPerDictionary.save();
 }
 
 //load word list from given file

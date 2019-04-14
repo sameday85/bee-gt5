@@ -1,4 +1,5 @@
 #include "QFile"
+#include "QDebug"
 #include "QTextStream"
 #include "statistics.h"
 
@@ -37,17 +38,14 @@ int Statistics::getCorrectPercentage() {
     return 100 * correct / asked;
 }
 
-void Statistics::load(QString user) {
-    mUsername = user;
+void Statistics::load() {
     stats.clear();
-    statsFilePath=QString::asprintf("%s/%s.txt", szAppCacheDir, mUsername.toStdString().c_str());
-
     QFile file(statsFilePath);
     if (!file.open(QIODevice::ReadOnly))
         return;
 
-   QTextStream in(&file);
-   while (!in.atEnd()) {
+    QTextStream in(&file);
+    while (!in.atEnd()) {
        QString line = in.readLine();
        int pos = line.indexOf("=");
        if (pos > 0) {
@@ -79,6 +77,18 @@ void Statistics::save() {
         ++i;
     }
     file.close();
+}
+
+void Statistics::loadHistoryStats(QString user) {
+    statsFilePath=QString::asprintf("%s/%s.txt", szAppCacheDir, user.toStdString().c_str());
+    load();
+}
+
+void Statistics::loadDictStats(QString user, QString dictionary) {
+    int pos = dictionary.indexOf(".");
+    QString suffix = pos > 0 ? dictionary.left(pos) : dictionary;
+    statsFilePath=QString::asprintf("%s/%s_%s.txt", szAppCacheDir, user.toStdString().c_str(), suffix.toStdString().c_str());
+    load();
 }
 
 int Statistics::getWordIndexLastPracticed(QString dict, int grade) {

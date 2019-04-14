@@ -39,6 +39,7 @@ void MainWindow::createMenus()
     userMenu->addAction(aboutAct);
 
     ui->mainToolBar->addAction(loginAct);
+    ui->mainToolBar->addAction(statsAct);
 }
 
 //https://stackoverflow.com/questions/14356121/how-to-call-function-after-window-is-shown
@@ -71,8 +72,10 @@ void MainWindow::createActions()
     loginAct->setIcon(icon);
     connect(loginAct, &QAction::triggered, this, &MainWindow::loginOrLogout);
 
+    QIcon icon2(":/piechart.png");
     statsAct = new QAction(tr("&Statistics..."), this);
     statsAct->setStatusTip(tr("Statistics"));
+    statsAct->setIcon(icon2);
     connect(statsAct, &QAction::triggered, this, &MainWindow::viewStatistics);
 
     retryAct = new QAction(tr("&Restart"), this);
@@ -127,7 +130,7 @@ void MainWindow::viewStatistics() {
     if ((mMode == MODE_NA) || (classRoom == NULL))
         return;
 
-    StatisticsDialog* statsDialog = new StatisticsDialog( this, classRoom->getStatistic(), classRoom->getStatisticLifetime());
+    StatisticsDialog* statsDialog = new StatisticsDialog( this, classRoom->getStatistic(), classRoom->getStatisticPerDicitionary(), classRoom->getStatisticLifetime());
     statsDialog->exec();
 }
 

@@ -7,10 +7,11 @@
 
 QT_CHARTS_USE_NAMESPACE
 
-StatisticsDialog::StatisticsDialog(QWidget * parent, Statistics *stats_, Statistics *lifetimeStats_) :
+StatisticsDialog::StatisticsDialog(QWidget * parent, Statistics *stats_, Statistics *perDictionary_, Statistics *lifetimeStats_) :
     QDialog(parent)
 {
     stats = stats_;
+    perDictionaryStats = perDictionary_;
     lifetimeStats = lifetimeStats_;
 
     setUpGUI();
@@ -56,6 +57,32 @@ void StatisticsDialog::setUpGUI() {
         label->setText(QString::asprintf("%d of %d", stats->getCorrect(), stats->getAsked()));
         formGridLayout->addWidget(label, 1, 0, Qt::AlignCenter);
     }
+    //per dictionary statistics
+    {
+        QPieSeries *series = new QPieSeries();
+        series->append("Correct", perDictionaryStats->getCorrect());
+        series->append("Failed", perDictionaryStats->getAsked() - perDictionaryStats->getCorrect());
+        {
+            QPieSlice *slice = series->slices().at(0);
+            slice->setBrush(Qt::green);
+        }
+        {
+            QPieSlice *slice = series->slices().at(1);
+            slice->setBrush(Qt::red);
+        }
+        QChart *chart = new QChart();
+        chart->addSeries(series);
+        chart->setTitle("Current List");
+        chart->legend()->hide();
+
+        QChartView *chartView = new QChartView(chart);
+        chartView->setRenderHint(QPainter::Antialiasing);
+
+        formGridLayout->addWidget(chartView, 0, 1);
+        QLabel *label = new QLabel (this);
+        label->setText(QString::asprintf("%d of %d", perDictionaryStats->getCorrect(), perDictionaryStats->getAsked()));
+        formGridLayout->addWidget(label, 1, 1, Qt::AlignCenter);
+    }
     //lifetime statistics
     {
         QPieSeries *series = new QPieSeries();
@@ -77,10 +104,10 @@ void StatisticsDialog::setUpGUI() {
         QChartView *chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
 
-        formGridLayout->addWidget(chartView, 0, 1);
+        formGridLayout->addWidget(chartView, 0, 2);
         QLabel *label = new QLabel (this);
         label->setText(QString::asprintf("%d of %d", lifetimeStats->getCorrect(), lifetimeStats->getAsked()));
-        formGridLayout->addWidget(label, 1, 1, Qt::AlignCenter);
+        formGridLayout->addWidget(label, 1, 2, Qt::AlignCenter);
     }
 
     buttons = new QDialogButtonBox( this );
@@ -92,7 +119,7 @@ void StatisticsDialog::setUpGUI() {
              SLOT (slotOnOk()) );
 
     //addWidget(QWidget * widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = 0)
-    formGridLayout->addWidget(buttons, 2, 0, 1, 2 );
+    formGridLayout->addWidget(buttons, 2, 0, 1, 3 );
 
     setLayout( formGridLayout );
 }
