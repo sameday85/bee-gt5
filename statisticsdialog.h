@@ -18,6 +18,10 @@ private:
 
 public slots:
     void slotOnOk();
+    void slotOnReset();
+
+signals:
+    void resetStats();
 
 private:
     QDialogButtonBox *buttons;

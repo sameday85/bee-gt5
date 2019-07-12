@@ -134,6 +134,11 @@ void MainWindow::viewStatistics() {
         return;
 
     StatisticsDialog* statsDialog = new StatisticsDialog( this, classRoom->getStatistic(), classRoom->getStatisticPerDicitionary(), classRoom->getStatisticLifetime());
+    connect( statsDialog,
+     SIGNAL (resetStats()),
+     this,
+     SLOT (slotOnResetStats()));
+
     statsDialog->exec();
 }
 
@@ -203,6 +208,10 @@ void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, 
         onStart();
     }
     onUpdateUi();
+}
+
+void MainWindow::slotOnResetStats() {
+    classRoom->resetStats();
 }
 
 void MainWindow::loadSettings() {
@@ -336,3 +345,4 @@ void MainWindow::showWordEx(WordEx *word) {
     }
     ui->textEdit->setText(content);
 }
+

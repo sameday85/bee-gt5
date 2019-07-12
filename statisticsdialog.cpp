@@ -111,15 +111,21 @@ void StatisticsDialog::setUpGUI() {
     }
 
     buttons = new QDialogButtonBox( this );
-    buttons->addButton( QDialogButtonBox::Ok ); //practice
+    buttons->addButton( QDialogButtonBox::Reset);
+    buttons->addButton( QDialogButtonBox::Ok);
 
     connect( buttons->button( QDialogButtonBox::Ok ),
              SIGNAL (clicked()),
              this,
              SLOT (slotOnOk()) );
 
+    connect( buttons->button( QDialogButtonBox::Reset ),
+             SIGNAL (clicked()),
+             this,
+             SLOT (slotOnReset()) );
+
     //addWidget(QWidget * widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = 0)
-    formGridLayout->addWidget(buttons, 2, 0, 1, 3 );
+    formGridLayout->addWidget(buttons, 2, 2, 1, 1 );
 
     setLayout( formGridLayout );
 }
@@ -128,3 +134,7 @@ void StatisticsDialog::slotOnOk() {
     close();
 }
 
+void StatisticsDialog::slotOnReset() {
+    emit resetStats();
+    close();
+}

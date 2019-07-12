@@ -26,6 +26,7 @@ protected:
 public slots:
     void sayHello();
     void slotOnLogin(QString&,QString&, int&, int&);
+    void slotOnResetStats();
 
 private:
     Ui::MainWindow *ui;

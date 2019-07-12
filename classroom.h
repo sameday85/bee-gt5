@@ -24,6 +24,7 @@ public:
     Statistics *getStatisticLifetime();
     Statistics *getStatisticPerDicitionary();
     Statistics *getStatistic();
+    void resetStats();
     int getFinishedGrade();
 
 private:

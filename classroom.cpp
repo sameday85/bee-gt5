@@ -77,6 +77,10 @@ Statistics *ClassRoom::getStatistic() {
     return &stats;
 }
 
+void ClassRoom::resetStats() {
+    statsPerDictionary.reset();
+}
+
 Word* ClassRoom::getCurrentWord() {
     return currentWord;
 }
