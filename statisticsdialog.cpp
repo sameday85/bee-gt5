@@ -54,7 +54,7 @@ void StatisticsDialog::setUpGUI() {
 
         formGridLayout->addWidget(chartView, 0, 0);
         QLabel *label = new QLabel (this);
-        label->setText(QString::asprintf("%d of %d", stats->getCorrect(), stats->getAsked()));
+        label->setText(QString::asprintf("%d of %d: %.2f%%", stats->getCorrect(), stats->getAsked(), stats->getCorrectPercentage()));
         formGridLayout->addWidget(label, 1, 0, Qt::AlignCenter);
     }
     //per dictionary statistics
@@ -80,7 +80,7 @@ void StatisticsDialog::setUpGUI() {
 
         formGridLayout->addWidget(chartView, 0, 1);
         QLabel *label = new QLabel (this);
-        label->setText(QString::asprintf("%d of %d", perDictionaryStats->getCorrect(), perDictionaryStats->getAsked()));
+        label->setText(QString::asprintf("%d of %d: %.2f%%", perDictionaryStats->getCorrect(), perDictionaryStats->getAsked(), perDictionaryStats->getCorrectPercentage()));
         formGridLayout->addWidget(label, 1, 1, Qt::AlignCenter);
     }
     //lifetime statistics
@@ -106,26 +106,27 @@ void StatisticsDialog::setUpGUI() {
 
         formGridLayout->addWidget(chartView, 0, 2);
         QLabel *label = new QLabel (this);
-        label->setText(QString::asprintf("%d of %d", lifetimeStats->getCorrect(), lifetimeStats->getAsked()));
+        label->setText(QString::asprintf("%d of %d: %.2f%%", lifetimeStats->getCorrect(), lifetimeStats->getAsked(), lifetimeStats->getCorrectPercentage()));
         formGridLayout->addWidget(label, 1, 2, Qt::AlignCenter);
     }
 
-    buttons = new QDialogButtonBox( this );
-    buttons->addButton( QDialogButtonBox::Reset);
-    buttons->addButton( QDialogButtonBox::Ok);
-
-    connect( buttons->button( QDialogButtonBox::Ok ),
-             SIGNAL (clicked()),
-             this,
-             SLOT (slotOnOk()) );
-
-    connect( buttons->button( QDialogButtonBox::Reset ),
+    buttonGrp1 = new QDialogButtonBox( this );
+    buttonGrp1->addButton( QDialogButtonBox::Reset);
+    connect( buttonGrp1->button( QDialogButtonBox::Reset ),
              SIGNAL (clicked()),
              this,
              SLOT (slotOnReset()) );
-
     //addWidget(QWidget * widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = 0)
-    formGridLayout->addWidget(buttons, 2, 2, 1, 1 );
+    formGridLayout->addWidget(buttonGrp1, 2, 1, 1, 1, Qt::AlignCenter);
+
+    buttonGrp2 = new QDialogButtonBox( this );
+    buttonGrp2->addButton( QDialogButtonBox::Ok);
+    connect( buttonGrp2->button( QDialogButtonBox::Ok ),
+             SIGNAL (clicked()),
+             this,
+             SLOT (slotOnOk()) );
+    //addWidget(QWidget * widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = 0)
+    formGridLayout->addWidget(buttonGrp2, 2, 2, 1, 1);
 
     setLayout( formGridLayout );
 }

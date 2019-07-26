@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core network gui charts
+QT       += core network gui charts sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     statisticsdialog.cpp \
     dicthelper.cpp \
     wordex.cpp \
-    runguard.cpp
+    runguard.cpp \
+    dbmanager.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
@@ -47,7 +48,8 @@ HEADERS  += mainwindow.h \
     statisticsdialog.h \
     dicthelper.h \
     wordex.h \
-    runguard.h
+    runguard.h \
+    dbmanager.h
 
 FORMS    += mainwindow.ui
 

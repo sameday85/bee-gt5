@@ -32,10 +32,10 @@ void Statistics::incCorrect() {
     ++correct;
 }
 
-int Statistics::getCorrectPercentage() {
+float Statistics::getCorrectPercentage() {
     if (asked <= 0)
         return 0;
-    return 100 * correct / asked;
+    return 100.0f * correct / asked;
 }
 
 void Statistics::load() {

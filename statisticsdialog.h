@@ -24,7 +24,7 @@ signals:
     void resetStats();
 
 private:
-    QDialogButtonBox *buttons;
+    QDialogButtonBox *buttonGrp1, *buttonGrp2;
 
     Statistics *stats;
     Statistics *perDictionaryStats;

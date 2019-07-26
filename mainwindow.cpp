@@ -28,6 +28,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mAutoPopup = false;
     mMode = MODE_NA;
+
+    QString dbPath=QString::asprintf("%s/bee.db", szAppCacheDir);
+    mDbManager = new DbManager(dbPath);
+    mDbManager->createDbIf();
+    mStatId = mUserId = mDictId = 0;
 }
 
 void MainWindow::createMenus()
@@ -64,6 +69,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete mDbManager;
 }
 
 void MainWindow::createActions()
@@ -133,6 +139,7 @@ void MainWindow::viewStatistics() {
     if ((mMode == MODE_NA) || (classRoom == NULL))
         return;
 
+    saveTodayStats();
     StatisticsDialog* statsDialog = new StatisticsDialog( this, classRoom->getStatistic(), classRoom->getStatisticPerDicitionary(), classRoom->getStatisticLifetime());
     connect( statsDialog,
      SIGNAL (resetStats()),
@@ -144,6 +151,7 @@ void MainWindow::viewStatistics() {
 
 void MainWindow::logout() {
     if (classRoom) {
+        saveTodayStats();
         classRoom->dismiss();
 
         delete classRoom;
@@ -153,7 +161,8 @@ void MainWindow::logout() {
         mMode = MODE_NA;
         saveSettings();
         onUpdateUi();
-     }
+    }
+    mStatId = mUserId = mDictId = 0;
 }
 
 void MainWindow::retry() {
@@ -202,6 +211,9 @@ void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, 
         mUsername = username;
         mGrade = grade;
         mDictionary = dictionary;
+        mUserId = mDbManager->insertUserIf(mUsername);
+        mDictId = mDbManager->insertDictIf(mDictionary);
+        mStatId = 0;
         if (mMode == MODE_PLACE)
             mDictionary=DEFAULT_DICT;
         classRoom = new ClassRoom(mUsername, mDictionary, mMode);
@@ -244,6 +256,19 @@ void MainWindow::saveSettings() {
     settings.setValue("size", size());
     settings.setValue("pos", pos());
     settings.endGroup();
+}
+
+void MainWindow::saveTodayStats() {
+    if (classRoom == NULL)
+        return;
+
+    Statistics *stats = classRoom->getStatistic();
+    if (mStatId > 0) {
+        mDbManager->updateStat(mStatId, stats->getAsked(), stats->getCorrect());
+    }
+    else {
+        mStatId = mDbManager->insertStat(mUserId, mDictId, stats->getAsked(), stats->getCorrect());
+    }
 }
 
 void MainWindow::onStart() {
@@ -345,4 +370,3 @@ void MainWindow::showWordEx(WordEx *word) {
     }
     ui->textEdit->setText(content);
 }
-

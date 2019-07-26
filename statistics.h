@@ -30,7 +30,7 @@ public:
     void incAsked();
     int getCorrect();
     void incCorrect();
-    int getCorrectPercentage();
+    float getCorrectPercentage();
 };
 
 #endif // STATISTICS_H

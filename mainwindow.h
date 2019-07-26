@@ -3,6 +3,7 @@
 
 #include <QLabel>
 #include <QMainWindow>
+#include <dbmanager.h>
 #include "classroom.h"
 #include "statistics.h"
 #include "wordex.h"
@@ -52,15 +53,20 @@ private slots:
     void onEnterKey();
 
 private:
+    DbManager *mDbManager;
     ClassRoom *classRoom;
     QString mDictionary;
+    qlonglong mDictId;
     QString mUsername;
+    qlonglong mUserId;
     int mGrade, mMode;
     bool mDone, mAutoPopup;
+    qlonglong mStatId;
 
 
     void loadSettings();
     void saveSettings();
+    void saveTodayStats();
     void onStart();
     void onUpdateUi();
     void showHelp();
