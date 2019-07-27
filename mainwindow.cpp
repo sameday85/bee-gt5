@@ -140,7 +140,13 @@ void MainWindow::viewStatistics() {
         return;
 
     saveTodayStats();
-    StatisticsDialog* statsDialog = new StatisticsDialog( this, classRoom->getStatistic(), classRoom->getStatisticPerDicitionary(), classRoom->getStatisticLifetime());
+    Statistics *perDict = mDbManager->findDictStatsBy(mUserId, mDictId);
+    Statistics *lifetime= mDbManager->findLifetimeStatsBy(mUserId);
+    StatisticsDialog* statsDialog = new StatisticsDialog( this,
+                                                          classRoom->getStatistic(),
+                                                          perDict,
+                                                          lifetime,
+                                                          mDbManager->findStatsBy(mUserId));
     connect( statsDialog,
      SIGNAL (resetStats()),
      this,
@@ -223,7 +229,7 @@ void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, 
 }
 
 void MainWindow::slotOnResetStats() {
-    classRoom->resetStats();
+    mDbManager->resetDictStatsBy(mUserId, mDictId);
 }
 
 void MainWindow::loadSettings() {
@@ -261,18 +267,23 @@ void MainWindow::saveSettings() {
 void MainWindow::saveTodayStats() {
     if (classRoom == NULL)
         return;
+    if (mMode != MODE_PRACTICE && mMode != MODE_QUIZ)
+        return;
 
     Statistics *stats = classRoom->getStatistic();
     if (mStatId > 0) {
-        mDbManager->updateStat(mStatId, stats->getAsked(), stats->getCorrect());
+        mDbManager->updateStat(mStatId, stats->getAsked(), stats->getAnswered());
     }
     else {
-        mStatId = mDbManager->insertStat(mUserId, mDictId, stats->getAsked(), stats->getCorrect());
+        mStatId = mDbManager->insertStat(mUserId, mDictId, stats->getAsked(), stats->getAnswered());
     }
+    mDbManager->updatePositionBy(mUserId, mDictId, mGrade, classRoom->getProgress());
 }
 
 void MainWindow::onStart() {
-    mDone = classRoom->prepare(mGrade) <= 0;
+    int progress = mDbManager->getPositionBy(mUserId, mDictId, mGrade, 0);
+    mDone = classRoom->prepare(mGrade, progress) <= 0;
+    mGrade = classRoom->getGrade();
     ui->progressBar->setRange(0, classRoom->getTotalWordsSelected());
     ui->progressBar->setValue(classRoom->getProgress());
 
@@ -296,7 +307,7 @@ void MainWindow::onUpdateUi() {
 }
 
 void MainWindow::showStats(QLabel *label, Statistics *stats) {
-    QString info = QString::asprintf("Total: %d, Correct: %d, Correct Percentage: %d%%", stats->getAsked(), stats->getCorrect(), stats->getCorrect() * 100 / stats->getAsked());
+    QString info = QString::asprintf("Total: %d, Correct: %d, Correct Percentage: %.2f%%", stats->getAsked(), stats->getAnswered(), stats->getCorrectPercentage());
     label->setText(info);
 }
 

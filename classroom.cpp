@@ -12,11 +12,9 @@ ClassRoom::ClassRoom(QString &username, QString& dictionary, int& mode)
     mMode = mode;
 
     loadDictionary();
-    statsLifetime.loadHistoryStats(mUsername);
-    statsPerDictionary.loadDictStats(mUsername, mDictionary);
 }
 
-int ClassRoom::prepare(int forGrade) {
+int ClassRoom::prepare(int forGrade, int progress) {
     started = tried = false;
     mGrade = forGrade;
     if (!multipleGradeSupported)
@@ -29,7 +27,7 @@ int ClassRoom::prepare(int forGrade) {
     switch (mMode) {
     case MODE_PRACTICE:
         chooseWords(0, false);
-        selected = statsLifetime.getWordIndexLastPracticed(mDictionary, mGrade);
+        selected = progress;
         if (selected < 0 || selected >= selectedTotal)
             selected = 0;
         break;
@@ -42,6 +40,10 @@ int ClassRoom::prepare(int forGrade) {
         break;
     }
     return mWordList.size();
+}
+
+int ClassRoom::getGrade() {
+    return multipleGradeSupported ? mGrade : 0;
 }
 
 void ClassRoom::chooseWords(int max, bool random) {
@@ -65,20 +67,8 @@ void ClassRoom::chooseWords(int max, bool random) {
     }
 }
 
-Statistics *ClassRoom::getStatisticLifetime() {
-    return &statsLifetime;
-}
-
-Statistics *ClassRoom::getStatisticPerDicitionary() {
-    return &statsPerDictionary;
-}
-
 Statistics *ClassRoom::getStatistic() {
     return &stats;
-}
-
-void ClassRoom::resetStats() {
-    statsPerDictionary.reset();
 }
 
 Word* ClassRoom::getCurrentWord() {
@@ -137,8 +127,6 @@ int ClassRoom::onAnswer(QString answer) {
     if (!tried) {
         tried = true;
 
-        statsLifetime.incAsked();
-        statsPerDictionary.incAsked();
         stats.incAsked();
     }
     if (answer == "c") {
@@ -172,9 +160,7 @@ int ClassRoom::onAnswer(QString answer) {
     else if (QString::compare(answer, currentWord->getSpelling(), Qt::CaseInsensitive) == 0) {
         ret = RC_CORRECT;
         if (failures <= 0) {
-            statsLifetime.incCorrect();
-            statsPerDictionary.incCorrect();
-            stats.incCorrect();
+            stats.incAnswered();
         }
         say((failures <= 0) ? "perfect.wav" : "pass.wav");
     }
@@ -191,10 +177,6 @@ void ClassRoom::dismiss() {
     for (int i = 0; i < mWordList.size(); ++i)
         delete mWordList.at(i);
     mWordList.clear();
-    if (mMode == MODE_PRACTICE)
-        statsLifetime.setWordIndexLastPracticed(mDictionary, mGrade, selected);
-    statsLifetime.save();
-    statsPerDictionary.save();
 }
 
 //load word list from given file
@@ -219,7 +201,10 @@ void ClassRoom::loadDictionary () {
                     mWordList.append(ptrWord);
                     foreach(const QXmlStreamAttribute &attr, xmlReader->attributes()) {
                         if (attr.name().toString() == "grade") {
-                            ptrWord->setGrade(attr.value().toInt());
+                            int grade = attr.value().toInt();
+                            ptrWord->setGrade(grade);
+                            if (grade > 1)
+                                multipleGradeSupported = true;
                         }
                     }
                 }

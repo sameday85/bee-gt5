@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QPushButton>
+#include <qvector.h>
 #include "statistics.h"
 
 class StatisticsDialog : public QDialog
@@ -11,7 +12,8 @@ class StatisticsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit StatisticsDialog(QWidget* parent, Statistics *stats_, Statistics *perDictionary_, Statistics *lifetimeStats_);
+    explicit StatisticsDialog(QWidget* parent, Statistics *stats_, Statistics *perDictionary_, Statistics *lifetimeStats_, QVector<Statistics*> *breakdown);
+    ~StatisticsDialog();
 
 private:
     void setUpGUI();
@@ -29,6 +31,7 @@ private:
     Statistics *stats;
     Statistics *perDictionaryStats;
     Statistics *lifetimeStats;
+    QVector<Statistics*> *breakdown;
 };
 
 #endif // STATISTICSDIALOG_H

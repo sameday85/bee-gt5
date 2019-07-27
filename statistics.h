@@ -9,17 +9,14 @@ class Statistics
 {
 public:
     Statistics();
-    void loadHistoryStats(QString user);
-    void loadDictStats(QString user, QString dictionary);
-    void save();
+    Statistics(qlonglong time, int asked, int answered);
 
 private:
     QHash<QString, int> stats;
     QString statsFilePath;
 
-    int asked, correct;
-private:
-    void load();
+    int asked, answered;
+    qlonglong time;
 
 public:
     int getWordIndexLastPracticed(QString dict, int grade);
@@ -27,9 +24,13 @@ public:
 
     void reset();
     int getAsked();
+    void setAsked(int value);
     void incAsked();
-    int getCorrect();
-    void incCorrect();
+    int getAnswered();
+    void setAnswered(int value);
+    void incAnswered();
+    qlonglong getTime();
+    void setTime (qlonglong tm);
     float getCorrectPercentage();
 };
 

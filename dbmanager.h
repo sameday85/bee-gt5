@@ -5,6 +5,8 @@
 #include <QSqlDriver>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <qvector.h>
+#include "statistics.h"
 
 class DbManager
 {
@@ -17,6 +19,13 @@ public:
     qlonglong insertDictIf(QString dictName);
     qlonglong insertStat(qlonglong userId, qlonglong dictId, int asked, int answered);
     void updateStat(qlonglong id, int asked, int answered);
+    QVector<Statistics*>* findStatsBy(qlonglong userId);
+    Statistics* findDictStatsBy(qlonglong userId, qlonglong dictId);
+    Statistics* findLifetimeStatsBy(qlonglong userId);
+    void resetDictStatsBy(qlonglong userId, qlonglong dictId);
+    int getPositionBy(qlonglong userId, qlonglong dictId, int grade, int def);
+    void updatePositionBy(qlonglong userId, qlonglong dictId, int grade, int pos);
+
 private:
     QString mDbName;
     QSqlDatabase mDb;

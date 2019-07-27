@@ -15,16 +15,14 @@ class ClassRoom : public QObject
     Q_OBJECT
 public:
     explicit ClassRoom(QString &username, QString& dictionary, int& mode);
-    int prepare(int forGrade);
+    int prepare(int forGrade, int progress);
+    int getGrade();
     void dismiss();
     int getTotalWordsSelected();
     int getProgress();
     Word* getCurrentWord();
 
-    Statistics *getStatisticLifetime();
-    Statistics *getStatisticPerDicitionary();
     Statistics *getStatistic();
-    void resetStats();
     int getFinishedGrade();
 
 private:
@@ -34,8 +32,6 @@ private:
 
 private:
     Speaker speaker;
-    Statistics statsLifetime;
-    Statistics statsPerDictionary;
     Statistics stats;
     QVector<Word*> mWordList;
     Word *currentWord;
