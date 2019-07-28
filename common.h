@@ -14,6 +14,7 @@ extern char szAppCacheDir[];
 #define MODE_PRACTICE               1
 #define MODE_QUIZ                   2
 #define MODE_PLACE                  3
+#define MODE_LEARNING               4
 
 #define RC_UNKNOWN          0
 #define RC_FINISHED_ALL     1

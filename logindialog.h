@@ -106,6 +106,7 @@ public slots:
     void slotAcceptPractice();
     void slotAcceptQuiz();
     void slotAcceptPlacement();
+    void slotAcceptLearning();
 
 private:
     void onUserLogin(int mode);

@@ -52,12 +52,14 @@ void LoginDialog::setUpGUI(){
     buttons->addButton( QDialogButtonBox::Ok ); //practice
     buttons->addButton( QDialogButtonBox::Open ); //quiz
     buttons->addButton( QDialogButtonBox::Save ); //palcement
+    buttons->addButton( QDialogButtonBox::Close ); //learning
 
     buttons->addButton( QDialogButtonBox::Cancel );
     buttons->button( QDialogButtonBox::Ok )->setText( tr("Practice") );
     buttons->button( QDialogButtonBox::Open )->setText( tr("Quiz") );
     buttons->button( QDialogButtonBox::Save )->setText( tr("Placement") );
     buttons->button( QDialogButtonBox::Cancel )->setText( tr("Cancel") );
+    buttons->button( QDialogButtonBox::Close )->setText( tr("Learning") );
 
     // connects slots
     connect( buttons->button( QDialogButtonBox::Cancel ),
@@ -78,6 +80,10 @@ void LoginDialog::setUpGUI(){
              SIGNAL (clicked()),
              this,
              SLOT (slotAcceptPlacement()) );
+    connect( buttons->button( QDialogButtonBox::Close ),
+             SIGNAL (clicked()),
+             this,
+             SLOT (slotAcceptLearning()) );
 
     // place components into the dialog
     formGridLayout->addWidget( labelDictionary, 0, 0 );
@@ -123,6 +129,10 @@ void LoginDialog::slotAcceptQuiz() {
 
 void LoginDialog::slotAcceptPlacement() {
     onUserLogin(MODE_PLACE);
+}
+
+void LoginDialog::slotAcceptLearning() {
+    onUserLogin(MODE_LEARNING);
 }
 
 void LoginDialog::onUserLogin(int mode){

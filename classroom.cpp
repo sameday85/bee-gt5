@@ -26,6 +26,7 @@ int ClassRoom::prepare(int forGrade, int progress) {
     stats.reset();
     switch (mMode) {
     case MODE_PRACTICE:
+    case MODE_LEARNING:
         chooseWords(0, false);
         selected = progress;
         if (selected < 0 || selected >= selectedTotal)

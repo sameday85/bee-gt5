@@ -26,7 +26,7 @@ void DbManager::createDbIf() {
         QSqlQuery query(mDb);
         query.exec("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)");
         query.exec("CREATE TABLE dicts (id INTEGER PRIMARY KEY, name TEXT)");
-        query.exec("CREATE TABLE progs (id INTEGER PRIMARY KEY, user_id INTEGER, dict_id INTEGER, grade INTEGER, pos INTEGER)");
+        query.exec("CREATE TABLE progs (id INTEGER PRIMARY KEY, user_id INTEGER, dict_id INTEGER, grade INTEGER, mode INTEGER, pos INTEGER)");
         query.exec("CREATE TABLE stats (id INTEGER PRIMARY KEY, time INTEGER, day INTEGER, user_id INTEGER, dict_id INTEGER, asked INTEGER, answered INTEGER, active INTEGER default 1)");
     }
 }
@@ -80,6 +80,7 @@ qlonglong DbManager::insertStat(qlonglong userId, qlonglong dictId, int asked, i
         return 0;
     qlonglong ms = QDateTime::currentDateTime().toMSecsSinceEpoch();
     qlonglong day = ms / MS_IN_DAY;
+
     QSqlQuery query(mDb);
     query.prepare("INSERT INTO stats (time, day, user_id, dict_id, asked, answered) VALUES (?,?,?,?,?,?)");
     query.addBindValue(ms);
@@ -135,7 +136,7 @@ void DbManager::updateStat(qlonglong id, int asked, int answered) {
      return stats;
  }
 
- QVector<Statistics*>* DbManager::findStatsBy(qlonglong userId) {
+ QVector<Statistics*>* DbManager::findDailyStatsBy(qlonglong userId) {
     QVector<Statistics*> *all = new QVector<Statistics*>;
 
     QSqlQuery query(mDb);
@@ -153,14 +154,15 @@ void DbManager::updateStat(qlonglong id, int asked, int answered) {
     return all;
 }
 
-int DbManager::getPositionBy(qlonglong userId, qlonglong dictId, int grade, int def) {
+int DbManager::getPositionBy(qlonglong userId, qlonglong dictId, int grade, int mode, int def) {
     int position = def;
 
     QSqlQuery query(mDb);
-    query.prepare("select pos from progs where user_id=? and dict_id=? and grade=?");
+    query.prepare("select pos from progs where user_id=? and dict_id=? and grade=? and mode=?");
     query.addBindValue(userId);
     query.addBindValue(dictId);
     query.addBindValue(grade);
+    query.addBindValue(mode);
     query.exec();
     if (query.next()) {
         position = query.value(0).toInt();
@@ -170,23 +172,25 @@ int DbManager::getPositionBy(qlonglong userId, qlonglong dictId, int grade, int 
     return position;
 }
 
-void DbManager::updatePositionBy(qlonglong userId, qlonglong dictId, int grade, int pos) {
-    int old = getPositionBy(userId, dictId, grade, -1);
+void DbManager::updatePositionBy(qlonglong userId, qlonglong dictId, int grade, int mode, int pos) {
+    int old = getPositionBy(userId, dictId, grade, mode, -1);
     if (old >= 0) {
         QSqlQuery query(mDb);
-        query.prepare("update progs set pos=? where user_id=? and dict_id=? and grade=?");
+        query.prepare("update progs set pos=? where user_id=? and dict_id=? and grade=? and mode=?");
         query.addBindValue(pos);
         query.addBindValue(userId);
         query.addBindValue(dictId);
         query.addBindValue(grade);
+        query.addBindValue(mode);
         query.exec();
     }
     else {
         QSqlQuery query(mDb);
-        query.prepare("insert into progs (user_id, dict_id, grade, pos) values (?,?,?,?)");
+        query.prepare("insert into progs (user_id, dict_id, grade, mode, pos) values (?,?,?,?,?)");
         query.addBindValue(userId);
         query.addBindValue(dictId);
         query.addBindValue(grade);
+        query.addBindValue(mode);
         query.addBindValue(pos);
         query.exec();
     }

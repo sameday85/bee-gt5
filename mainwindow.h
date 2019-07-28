@@ -51,6 +51,8 @@ private slots:
     void retry();
     void viewStatistics();
     void onEnterKey();
+    void afterPresent();
+    void autoAdvance();
 
 private:
     DbManager *mDbManager;
@@ -59,10 +61,10 @@ private:
     qlonglong mDictId;
     QString mUsername;
     qlonglong mUserId;
-    int mGrade, mMode;
-    bool mDone, mAutoPopup;
+    int mGrade, mLastGoodGrade, mMode;
+    bool mDone, mAutoPopup, mPaused;
     qlonglong mStatId;
-
+    int mPendingTimer;
 
     void loadSettings();
     void saveSettings();

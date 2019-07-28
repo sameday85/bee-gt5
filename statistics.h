@@ -2,7 +2,6 @@
 #define STATISTICS_H
 
 #include <QString>
-#include <QHash>
 #include "common.h"
 
 class Statistics
@@ -12,16 +11,10 @@ public:
     Statistics(qlonglong time, int asked, int answered);
 
 private:
-    QHash<QString, int> stats;
-    QString statsFilePath;
-
     int asked, answered;
     qlonglong time;
 
 public:
-    int getWordIndexLastPracticed(QString dict, int grade);
-    void setWordIndexLastPracticed(QString dict, int grade, int index);
-
     void reset();
     int getAsked();
     void setAsked(int value);

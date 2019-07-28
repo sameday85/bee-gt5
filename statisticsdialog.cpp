@@ -96,8 +96,8 @@ void StatisticsDialog::setUpGUI() {
     //today's statistics
     {
         QPieSeries *series = new QPieSeries();
-        series->append("Correct", stats->getAnswered());
-        series->append("Failed", stats->getAsked() - stats->getAnswered());
+        series->append("Correct", stats ? stats->getAnswered() : 0);
+        series->append("Failed", stats ? stats->getAsked() - stats->getAnswered() : 0);
         {
             QPieSlice *slice = series->slices().at(0);
             slice->setBrush(Qt::green);
@@ -116,7 +116,10 @@ void StatisticsDialog::setUpGUI() {
 
         formGridLayout->addWidget(chartView, 1, 0);
         QLabel *label = new QLabel (this);
-        label->setText(QString::asprintf("%d of %d: %.2f%%", stats->getAnswered(), stats->getAsked(), stats->getCorrectPercentage()));
+        if (stats)
+            label->setText(QString::asprintf("%d of %d: %.2f%%", stats->getAnswered(), stats->getAsked(), stats->getCorrectPercentage()));
+        else
+            label->setText("N/A");
         formGridLayout->addWidget(label, 2, 0, Qt::AlignCenter);
     }
     //per dictionary statistics
@@ -198,7 +201,7 @@ void StatisticsDialog::setUpGUI() {
 }
 
 void StatisticsDialog::slotOnOk() {
-    qDebug() << size().width() << size().height();
+    //qDebug() << size().width() << size().height();
     close();
 }
 

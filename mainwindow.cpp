@@ -10,6 +10,7 @@
 #include "dicthelper.h"
 
 #define DEFAULT_DICT        "2018.xml"
+#define AUTO_DELAY          10000   //ms
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -26,13 +27,14 @@ MainWindow::MainWindow(QWidget *parent) :
              SLOT (onEnterKey())
              );
 
-    mAutoPopup = false;
+    mAutoPopup = mPaused = false;
     mMode = MODE_NA;
 
     QString dbPath=QString::asprintf("%s/bee.db", szAppCacheDir);
     mDbManager = new DbManager(dbPath);
     mDbManager->createDbIf();
     mStatId = mUserId = mDictId = 0;
+    mPendingTimer = 0;
 }
 
 void MainWindow::createMenus()
@@ -126,7 +128,7 @@ void MainWindow::login() {
     loginDialog->setDictionaryList(dictionaryList);
     loginDialog->setUsername(mUsername);
     loginDialog->setDictionary(mDictionary);
-    loginDialog->setGrade(mGrade);
+    loginDialog->setGrade(mGrade > 0 ? mGrade : mLastGoodGrade);
 
     connect( loginDialog,
      SIGNAL (acceptLogin(QString&,QString&,int&, int&)),
@@ -143,16 +145,18 @@ void MainWindow::viewStatistics() {
     Statistics *perDict = mDbManager->findDictStatsBy(mUserId, mDictId);
     Statistics *lifetime= mDbManager->findLifetimeStatsBy(mUserId);
     StatisticsDialog* statsDialog = new StatisticsDialog( this,
-                                                          classRoom->getStatistic(),
+                                                          (mMode == MODE_LEARNING) ? NULL : classRoom->getStatistic(), //today stats
                                                           perDict,
                                                           lifetime,
-                                                          mDbManager->findStatsBy(mUserId));
+                                                          mDbManager->findDailyStatsBy(mUserId));
     connect( statsDialog,
      SIGNAL (resetStats()),
      this,
      SLOT (slotOnResetStats()));
 
+    mPaused = true;
     statsDialog->exec();
+    mPaused = false;
 }
 
 void MainWindow::logout() {
@@ -180,9 +184,10 @@ void MainWindow::retry() {
 }
 
 void MainWindow::onEnterKey() {
-    QString answer = ui->lineEditWord->text();
+    QString answer = (mMode == MODE_LEARNING) ? "?" : ui->lineEditWord->text();
     if (answer.isEmpty())
-        return;
+       return;
+
     ui->lineEditWord->setText("");
     if (mMode == MODE_NA || mDone) {
         lookup(answer);
@@ -194,6 +199,8 @@ void MainWindow::onEnterKey() {
         }
         if (ret == RC_CORRECT || ret == RC_SKIP) {
             ret = classRoom->present();
+            if (mMode == MODE_LEARNING)
+                afterPresent();
             ui->progressBar->setValue(classRoom->getProgress());
             if (ret == RC_FINISHED_ALL) {
                 mDone = true;
@@ -212,7 +219,8 @@ void MainWindow::onEnterKey() {
 
 void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, int&mode) {
     mMode = mode;
-    mDone = false;
+    mDone = mPaused = false;
+    mPendingTimer = 0;
     if (mMode != MODE_NA) {
         mUsername = username;
         mGrade = grade;
@@ -238,7 +246,7 @@ void MainWindow::loadSettings() {
    settings.beginGroup("User");
    mUsername=settings.value("UserName").toString();
    mDictionary=settings.value("Dictionary").toString();
-   mGrade = settings.value("Grade").toInt();
+   mGrade = mLastGoodGrade = settings.value("Grade").toInt();
    if (mUsername.isEmpty())
        mUsername="Guest";
    settings.endGroup();
@@ -255,7 +263,8 @@ void MainWindow::saveSettings() {
     settings.beginGroup("User");
     settings.setValue("UserName", mUsername);
     settings.setValue("Dictionary", mDictionary);
-    settings.setValue("Grade", mGrade);
+    if (mGrade > 0)
+        settings.setValue("Grade", mGrade);
     settings.endGroup();
 
     settings.beginGroup("Window");
@@ -267,28 +276,58 @@ void MainWindow::saveSettings() {
 void MainWindow::saveTodayStats() {
     if (classRoom == NULL)
         return;
-    if (mMode != MODE_PRACTICE && mMode != MODE_QUIZ)
+    if (mMode != MODE_PRACTICE && mMode != MODE_QUIZ && mMode != MODE_LEARNING)
         return;
 
-    Statistics *stats = classRoom->getStatistic();
-    if (mStatId > 0) {
-        mDbManager->updateStat(mStatId, stats->getAsked(), stats->getAnswered());
+    if (mMode == MODE_PRACTICE || mMode == MODE_QUIZ) {
+        Statistics *stats = classRoom->getStatistic();
+        if (mStatId > 0) {
+            mDbManager->updateStat(mStatId, stats->getAsked(), stats->getAnswered());
+        }
+        else {
+            mStatId = mDbManager->insertStat(mUserId, mDictId, stats->getAsked(), stats->getAnswered());
+        }
     }
-    else {
-        mStatId = mDbManager->insertStat(mUserId, mDictId, stats->getAsked(), stats->getAnswered());
-    }
-    mDbManager->updatePositionBy(mUserId, mDictId, mGrade, classRoom->getProgress());
+    if (mMode == MODE_PRACTICE || mMode == MODE_LEARNING)
+        mDbManager->updatePositionBy(mUserId, mDictId, mGrade, mMode, classRoom->getProgress());
 }
 
 void MainWindow::onStart() {
-    int progress = mDbManager->getPositionBy(mUserId, mDictId, mGrade, 0);
+    int progress = (mMode == MODE_PRACTICE || mMode == MODE_LEARNING) ? mDbManager->getPositionBy(mUserId, mDictId, mGrade, mMode, 0) : 0;
     mDone = classRoom->prepare(mGrade, progress) <= 0;
     mGrade = classRoom->getGrade();
+    if (mGrade > 0)
+        mLastGoodGrade = mGrade;
+
     ui->progressBar->setRange(0, classRoom->getTotalWordsSelected());
     ui->progressBar->setValue(classRoom->getProgress());
 
     if (!mDone) {
         QTimer::singleShot(50, classRoom, SLOT(present()));
+        if (mMode == MODE_LEARNING)
+            QTimer::singleShot(100, this, SLOT(afterPresent()));
+    }
+}
+
+void MainWindow::afterPresent() {
+    if (mMode == MODE_LEARNING) {
+        showWord(classRoom->getCurrentWord());
+        ++mPendingTimer;
+        QTimer::singleShot(AUTO_DELAY, this, SLOT(autoAdvance()));
+    }
+}
+
+void MainWindow::autoAdvance() {
+    if (mMode != MODE_LEARNING)
+        return;
+    if (--mPendingTimer > 0)
+        return;
+    if (mPaused) {
+        ++mPendingTimer;
+        QTimer::singleShot(200, this, SLOT(autoAdvance()));
+    }
+    else {
+        onEnterKey();
     }
 }
 
