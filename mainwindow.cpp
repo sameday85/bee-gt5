@@ -293,9 +293,9 @@ void MainWindow::saveTodayStats() {
 }
 
 void MainWindow::onStart() {
+    mGrade = classRoom->getGrade();
     int progress = (mMode == MODE_PRACTICE || mMode == MODE_LEARNING) ? mDbManager->getPositionBy(mUserId, mDictId, mGrade, mMode, 0) : 0;
     mDone = classRoom->prepare(mGrade, progress) <= 0;
-    mGrade = classRoom->getGrade();
     if (mGrade > 0)
         mLastGoodGrade = mGrade;
 

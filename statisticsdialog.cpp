@@ -51,7 +51,7 @@ void StatisticsDialog::setUpGUI() {
     //breakdown chart
     {
         QBarSet *set0 = new QBarSet("Asked");
-        QBarSet *set1 = new QBarSet("Answered");
+        QBarSet *set1 = new QBarSet("Correct");
         QStringList categories;
         int maxY = 0;
         for (int i = 0; i < breakdown->size(); ++i) {
