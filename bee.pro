@@ -56,3 +56,5 @@ FORMS    += mainwindow.ui
 RESOURCES += \
     images.qrc \
     data.qrc
+
+RC_ICONS = SpellingBee.ico

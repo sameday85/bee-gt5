@@ -5,7 +5,7 @@
 
 DictHelper::DictHelper(QString word)
 {
-    mWord = word;
+    mWord = word.toLower();
 }
 
 void DictHelper::loadCredentials() {
@@ -48,7 +48,7 @@ WordEx * DictHelper::download() {
 }
 
 bool DictHelper::downloadByApi(WordEx *word) {
-    //sprintf(message, "GET /api/v1/entries/en/%s HTTP/1.1\r\nHost: od-api.oxforddictionaries.com\r\nConnection: close\r\nAccept: application/json\r\napp_id: %s\r\napp_key: %s\r\n\r\n", word, szApiId, szApiKey);
+    //sprintf(message, "GET /api/v2/entries/en/%s HTTP/1.1\r\nHost: od-api.oxforddictionaries.com\r\nConnection: close\r\nAccept: application/json\r\napp_id: %s\r\napp_key: %s\r\n\r\n", word, szApiId, szApiKey);
     QString url = mApiBase + "/entries/en/" + mWord;
     QNetworkRequest request(url);
     request.setRawHeader("Accept", "application/json");
@@ -56,8 +56,9 @@ bool DictHelper::downloadByApi(WordEx *word) {
     request.setRawHeader(QString("app_key").toUtf8(), mApiKey.toUtf8());
     UrlConnection urlConnection;
     QNetworkReply *reply = urlConnection.doGet(request);
-    if (urlConnection.isError())
+    if (urlConnection.isError()) {
         return false;
+    }
     QString json = urlConnection.saveToString(reply);
     if (json.indexOf("Authentication failed") >= 0)
         return false;
@@ -97,7 +98,7 @@ bool DictHelper::downloadByApi(WordEx *word) {
 }
 
 bool DictHelper::downloadOnline(WordEx *word) {
-    QString url = QString::asprintf("https://en.oxforddictionaries.com/definition/us/%s", mWord.toStdString().c_str());
+    QString url = QString::asprintf("https://www.lexico.com/en/definition/%s", mWord.toStdString().c_str());
     UrlConnection urlConnection;
     QString page = urlConnection.download2String(url);
     QString category = parseCategory(page);
@@ -110,6 +111,24 @@ bool DictHelper::downloadOnline(WordEx *word) {
     WordCategory *wordCategory = new WordCategory(category, audio);
     wordCategory->addSense(new WordSense(definition, example));
     word->addCategory(wordCategory);
+
+    return true;
+}
+
+bool DictHelper::downloadOnline(Word *word) {
+    QString url = QString::asprintf("https://www.lexico.com/en/definition/%s", mWord.toStdString().c_str());
+    UrlConnection urlConnection;
+    QString page = urlConnection.download2String(url);
+    QString category = parseCategory(page);
+    QString definition = parseDefinitions(page, mWord);
+    QString example = parseExample(page);
+    QString audio = parseAudio(page);
+
+    if (category.isEmpty() && definition.isEmpty())
+        return false;
+    word->setCategory(category);
+    word->setDefinition(definition);
+    word->setSample(example);
 
     return true;
 }

@@ -3,6 +3,7 @@
 
 #include <QString>
 #include "wordex.h"
+#include "word.h"
 
 class DictHelper
 {
@@ -29,6 +30,9 @@ private:
     QString parseDefinitions(QString content, QString word);
     QString parseExample(QString content);
     QString parseAudio(QString content);
+
+public:
+    bool downloadOnline(Word *);
 };
 
 #endif // DICTHELPER_H

@@ -7,11 +7,13 @@
 
 Word::Word() {
     word="";
+    triedDownload = false;
 }
 
 Word::Word(QString _word)
 {
     word = _word;
+    triedDownload = false;
 }
 
 void Word::setSpelling(QString _word) {
@@ -36,6 +38,16 @@ void Word::setAudio(QString _audio) {
 
 void Word::setGrade(int _grade) {
     grade = _grade;
+}
+
+bool Word::getTriedDownload() const
+{
+    return triedDownload;
+}
+
+void Word::setTriedDownload(bool value)
+{
+    triedDownload = value;
 }
 
 QString Word::getSpelling() {

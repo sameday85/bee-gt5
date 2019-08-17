@@ -1,6 +1,7 @@
 #include <QFile>
 #include <QXmlStreamReader>
 #include "classroom.h"
+#include "dicthelper.h"
 
 #define PLACEMENT_CORRECT_PTG           80
 #define PLACEMENT_WORDS_EACH_GRADE      10
@@ -131,21 +132,27 @@ int ClassRoom::onAnswer(QString answer) {
         stats.incAsked();
     }
     if (answer == "c") {
+        downloadWordOnlineIf(currentWord);
         currentWord->pronounceCategory(true);
     }
     else if (answer == "c!") {
+        downloadWordOnlineIf(currentWord);
         currentWord->pronounceCategory(false);
     }
     else if (answer == "d") {
+        downloadWordOnlineIf(currentWord);
         currentWord->pronounceDefinition(true);
     }
     else if (answer == "d!") {
+        downloadWordOnlineIf(currentWord);
         currentWord->pronounceDefinition(false);
     }
     else if (answer == "s") {
+        downloadWordOnlineIf(currentWord);
         currentWord->pronounceSample(true);
     }
     else if (answer == "s!") {
+        downloadWordOnlineIf(currentWord);
         currentWord->pronounceSample(false);
     }
     else if (answer == "r") {
@@ -234,4 +241,18 @@ void ClassRoom::loadDictionary () {
 void ClassRoom::say(QString mp3) {
     QString path = QString::asprintf("%s/%s", szApplicationDir, mp3.toStdString().c_str());
     speaker.play_offline(path);
+}
+
+void ClassRoom::downloadWordOnlineIf(Word *word) {
+    if (word->getTriedDownload())
+        return;
+    word->setTriedDownload(true);
+    if (!word->getDefinition().isEmpty() || !word->getCategory().isEmpty())
+        return;
+
+    DictHelper *helper = new DictHelper(word->getSpelling());
+    helper->downloadOnline(word);
+    delete helper;
+
+    return;
 }

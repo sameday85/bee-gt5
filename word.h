@@ -26,6 +26,7 @@ private:
     QString definition;
     QString sample;
     QString audio;
+    bool triedDownload;
 
 public:
     int getGrade() const;
@@ -39,6 +40,8 @@ public:
     void pronounceCategory(bool online);
     void pronounceDefinition(bool online);
     void pronounceSample(bool online);
+    bool getTriedDownload() const;
+    void setTriedDownload(bool value);
 };
 
 #endif // WORD_H

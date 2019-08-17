@@ -29,6 +29,7 @@ private:
     void loadDictionary();
     void say(QString mp3);
     void chooseWords(int max, bool random);
+    void downloadWordOnlineIf(Word *word);
 
 private:
     Speaker speaker;
