@@ -43,8 +43,8 @@ int ClassRoom::prepare(int forGrade, int progress) {
     return mWordList.size();
 }
 
-int ClassRoom::getGrade() {
-    return multipleGradeSupported ? mGrade : 0;
+int ClassRoom::adjustGrade(int grade) {
+    return multipleGradeSupported ? grade : 0;
 }
 
 void ClassRoom::chooseWords(int max, bool random) {

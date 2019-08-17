@@ -1,32 +1,62 @@
 #include <QThread>
+#include <QDebug>
 #include "urlconnection.h"
 #include "speaker.h"
 #include "common.h"
 
 Speaker::Speaker()
 {
+    player = new QMediaPlayer();
+}
 
+Speaker::~Speaker() {
+    delete player;
+}
+
+void Speaker::stateChanged(QMediaPlayer::State state) {
+    //qDebug() << "player state " << state;
+    if (state == QMediaPlayer::StoppedState)
+        if (loop)
+            loop ->exit();
 }
 
 int Speaker::play_offline( QString audio_file) {
+    player->stop();
+
+    loop = new QEventLoop();
+
+    connect(player, SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(stateChanged(QMediaPlayer::State)));
+    player->setMedia(QUrl::fromLocalFile(audio_file));
+    player->setVolume(100);
+    player->play();
+
+    loop->exec();
+    delete loop;
+
+    return 0;
+    /*
     char command[256];
     int status;
-    /* create command to execute */
+    // create command to execute
     if (audio_file.endsWith(".wav"))
         sprintf( command, "omxplayer \"%s\" > /dev/null", audio_file.toStdString().c_str());
     else {
         sprintf( command, "mpg321 -q \"%s\"", audio_file.toStdString().c_str());
     }
-    /* play sound */
+    // play sound
     status = system( command );
     return status;
+    */
 }
 
 //Aassume the url points to a mp3 audio
 void Speaker::play_online(QString url) {
+    Q_UNUSED(url);
+    /*
     char command[255];
     sprintf(command, "mpg321 -q \"%s\"", url.toStdString().c_str());
     system(command );//QProcess::execute
+    */
 }
 
 /* speech.sh
@@ -40,12 +70,16 @@ pico2wave -w sentence.wav "The jacket is red" && omxplayer sentence.wav >/dev/nu
 */
 //when play audio online, omxplayer always stopps early
 void Speaker::read_sentence_online(QString sentence) {
+    read_sentence_offline(sentence);
+    /*
     if (sentence.isEmpty())
         return;
     sentence = sanityCheck(sentence);
     char command[512];
     sprintf(command, "%s/speech.sh \"%s\"", szApplicationDir, sentence.toStdString().c_str());
     system(command );
+    */
+    //qDebug() << "\nLib Build Version String: " << QSslSocket::sslLibraryBuildVersionString();
 }
 
 void Speaker::read_sentence_offline(QString sentence) {
@@ -53,9 +87,19 @@ void Speaker::read_sentence_offline(QString sentence) {
         return;
 
     sentence = sanityCheck(sentence);
-    char command[512];
-    sprintf(command, "pico2wave -w /tmp/sentence.wav \"%s\" && omxplayer /tmp/sentence.wav>/dev/null", sentence.toStdString().c_str());
-    system(command );
+    char command[1024];
+
+    sprintf(command, "PowerShell -Command \"Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('%s');\"", sentence.toStdString().c_str());
+    //system(command );
+
+    QProcess *myProcess = new QProcess();
+    myProcess->start(command);
+    myProcess->waitForStarted();
+    myProcess->waitForFinished();
+    delete myProcess;
+
+    //sprintf(command, "pico2wave -w /tmp/sentence.wav \"%s\" && omxplayer /tmp/sentence.wav>/dev/null", sentence.toStdString().c_str());
+    //system(command );
 }
 
 QString Speaker::sanityCheck(QString sentence) {

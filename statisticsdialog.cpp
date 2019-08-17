@@ -193,8 +193,8 @@ void StatisticsDialog::setUpGUI() {
     //addWidget(QWidget * widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = 0)
     formGridLayout->addWidget(buttonGrp2, 3, 2, 1, 1);
 
-    formGridLayout->setRowStretch(0, 100);
-    formGridLayout->setRowStretch(1, 1);
+    formGridLayout->setRowStretch(0, 4);
+    formGridLayout->setRowStretch(1, 2);
     formGridLayout->setRowStretch(2, 1);
     formGridLayout->setRowStretch(3, 1);
     setLayout( formGridLayout );

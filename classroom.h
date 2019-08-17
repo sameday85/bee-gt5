@@ -16,7 +16,7 @@ class ClassRoom : public QObject
 public:
     explicit ClassRoom(QString &username, QString& dictionary, int& mode);
     int prepare(int forGrade, int progress);
-    int getGrade();
+    int adjustGrade(int grade);
     void dismiss();
     int getTotalWordsSelected();
     int getProgress();
