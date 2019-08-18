@@ -40,10 +40,10 @@ WordEx * DictHelper::download() {
         return nullptr;
     WordEx *theWord = new WordEx(mWord);
     this->loadCredentials();
-    if (!mApiKey.isEmpty() && !mApiId.isEmpty())
-        if (downloadByApi(theWord))
-            return theWord;
-    downloadOnline(theWord);
+    if (!mApiKey.isEmpty() && !mApiId.isEmpty()) {
+        if (!downloadByApi(theWord))
+            downloadOnline(theWord);
+    }
     return theWord;
 }
 
@@ -57,6 +57,7 @@ bool DictHelper::downloadByApi(WordEx *word) {
     UrlConnection urlConnection;
     QNetworkReply *reply = urlConnection.doGet(request);
     if (urlConnection.isError()) {
+        qDebug() << reply->errorString();
         return false;
     }
     QString json = urlConnection.saveToString(reply);
@@ -111,24 +112,6 @@ bool DictHelper::downloadOnline(WordEx *word) {
     WordCategory *wordCategory = new WordCategory(category, audio);
     wordCategory->addSense(new WordSense(definition, example));
     word->addCategory(wordCategory);
-
-    return true;
-}
-
-bool DictHelper::downloadOnline(Word *word) {
-    QString url = QString::asprintf("https://www.lexico.com/en/definition/%s", mWord.toStdString().c_str());
-    UrlConnection urlConnection;
-    QString page = urlConnection.download2String(url);
-    QString category = parseCategory(page);
-    QString definition = parseDefinitions(page, mWord);
-    QString example = parseExample(page);
-    QString audio = parseAudio(page);
-
-    if (category.isEmpty() && definition.isEmpty())
-        return false;
-    word->setCategory(category);
-    word->setDefinition(definition);
-    word->setSample(example);
 
     return true;
 }

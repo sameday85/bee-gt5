@@ -380,7 +380,7 @@ void MainWindow::showHelp() {
     //ui->textEdit->setText(help);
 }
 
-void MainWindow::showWord(Word *word) {
+void MainWindow::showWord(WordEx *word) {
     QString spelling = word->getSpelling();
     if (!spelling.isEmpty()) {
         spelling.replace(0, 1, spelling[0].toUpper());

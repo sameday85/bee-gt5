@@ -17,7 +17,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 protected:
@@ -35,7 +35,7 @@ private:
     void createActions();
     void createMenus();
     void lookup(QString word);
-    void showWord(Word *word);
+    void showWord(WordEx *word);
     void showWordEx(WordEx *word);
 
     QMenu *userMenu;

@@ -16,6 +16,8 @@ public:
     QString getExample() const;
     QString getAudio() const;
 
+    bool downloadOnline(WordEx *);
+
 private:
     QString mApiId;
     QString mApiKey;
@@ -24,15 +26,11 @@ private:
     QString mWord;
 
     void loadCredentials();
-    bool downloadOnline(WordEx *);
     bool downloadByApi(WordEx *);
     QString parseCategory(QString content);
     QString parseDefinitions(QString content, QString word);
     QString parseExample(QString content);
     QString parseAudio(QString content);
-
-public:
-    bool downloadOnline(Word *);
 };
 
 #endif // DICTHELPER_H

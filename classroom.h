@@ -6,7 +6,7 @@
 #include <QTextStream>
 
 #include "common.h"
-#include "word.h"
+#include "wordex.h"
 #include "speaker.h"
 #include "statistics.h"
 
@@ -20,7 +20,7 @@ public:
     void dismiss();
     int getTotalWordsSelected();
     int getProgress();
-    Word* getCurrentWord();
+    WordEx* getCurrentWord();
 
     Statistics *getStatistic();
     int getFinishedGrade();
@@ -29,13 +29,13 @@ private:
     void loadDictionary();
     void say(QString mp3);
     void chooseWords(int max, bool random);
-    void downloadWordOnlineIf(Word *word);
+    void downloadWordOnlineIf(WordEx *word);
 
 private:
     Speaker speaker;
     Statistics stats;
-    QVector<Word*> mWordList;
-    Word *currentWord;
+    QVector<WordEx*> mWordList;
+    WordEx *currentWord;
     QString mUsername;
     QString mDictionary;
     int mGrade;

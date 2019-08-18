@@ -73,7 +73,7 @@ Statistics *ClassRoom::getStatistic() {
     return &stats;
 }
 
-Word* ClassRoom::getCurrentWord() {
+WordEx* ClassRoom::getCurrentWord() {
     return currentWord;
 }
 
@@ -162,6 +162,7 @@ int ClassRoom::onAnswer(QString answer) {
         currentWord->pronounceWordAlt();
     }
     else if (answer == "?") {
+        downloadWordOnlineIf(currentWord);
         ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
         ++failures;
     }
@@ -181,7 +182,7 @@ int ClassRoom::onAnswer(QString answer) {
 }
 
 void ClassRoom::dismiss() {
-    currentWord = NULL;
+    currentWord = nullptr;
     for (int i = 0; i < mWordList.size(); ++i)
         delete mWordList.at(i);
     mWordList.clear();
@@ -199,37 +200,52 @@ void ClassRoom::loadDictionary () {
 
     QXmlStreamReader *xmlReader = new QXmlStreamReader(&file);
     //Parse the XML until we reach end of it
-    Word *ptrWord;
+    QString spelling, category, definition, example, audio;
+    int grade = 0;
     while(!xmlReader->atEnd() && !xmlReader->hasError()) {
             // Read next element
             QXmlStreamReader::TokenType token = xmlReader->readNext();
             if(token == QXmlStreamReader::StartElement) {
                 if(xmlReader->name() == "word") {
-                    ptrWord = new Word();
-                    mWordList.append(ptrWord);
+                    grade = 0;
+                    spelling = category = definition = example = audio = "";
+
                     foreach(const QXmlStreamAttribute &attr, xmlReader->attributes()) {
                         if (attr.name().toString() == "grade") {
-                            int grade = attr.value().toInt();
-                            ptrWord->setGrade(grade);
+                            grade = attr.value().toInt();
                             if (grade > 1)
                                 multipleGradeSupported = true;
                         }
                     }
                 }
                 else if (xmlReader->name() == "spelling") {
-                    ptrWord->setSpelling(xmlReader->readElementText());
+                    spelling = xmlReader->readElementText();
                 }
                 else if (xmlReader->name() == "category") {
-                    ptrWord->setCategory(xmlReader->readElementText());
+                    category = xmlReader->readElementText();
                 }
                 else if (xmlReader->name() == "definitions") {
-                    ptrWord->setDefinition(xmlReader->readElementText());
+                    definition = xmlReader->readElementText();
                 }
                 else if (xmlReader->name() == "example") {
-                    ptrWord->setSample(xmlReader->readElementText());
+                    example = xmlReader->readElementText();
                 }
                 else if (xmlReader->name() == "audio") {
-                    ptrWord->setAudio(xmlReader->readElementText());
+                    audio = xmlReader->readElementText();
+                }
+            }
+            else if (token == QXmlStreamReader::EndElement) {
+                if(xmlReader->name() == "word") {
+                    if (!spelling.isEmpty()) {
+                        WordEx * word = new WordEx(spelling);
+                        word->setGrade(grade);
+
+                        WordCategory *wordCategory = new WordCategory(category, audio);
+                        wordCategory->addSense(new WordSense(definition, example));
+                        word->addCategory(wordCategory);
+
+                        mWordList.append(word);
+                    }
                 }
             }
     }
@@ -243,7 +259,7 @@ void ClassRoom::say(QString mp3) {
     speaker.play_offline(path);
 }
 
-void ClassRoom::downloadWordOnlineIf(Word *word) {
+void ClassRoom::downloadWordOnlineIf(WordEx *word) {
     if (word->getTriedDownload())
         return;
     word->setTriedDownload(true);
@@ -251,8 +267,6 @@ void ClassRoom::downloadWordOnlineIf(Word *word) {
         return;
 
     DictHelper *helper = new DictHelper(word->getSpelling());
-    helper->downloadOnline(word);
+    helper->downloadOnline(word); //Oxford api does not work anymore
     delete helper;
-
-    return;
 }

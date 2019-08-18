@@ -87,8 +87,8 @@ void Speaker::read_sentence_offline(QString sentence) {
         return;
 
     sentence = sanityCheck(sentence);
-    char command[1024];
 
+    char command[1024];
     sprintf(command, "PowerShell -Command \"Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('%s');\"", sentence.toStdString().c_str());
     //system(command );
 

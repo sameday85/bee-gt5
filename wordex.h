@@ -3,6 +3,9 @@
 
 #include <QString>
 #include <QList>
+#include "word.h"
+#include "speaker.h"
+#include "common.h"
 
 class WordSense {
 public:
@@ -31,20 +34,30 @@ private:
     QList<WordSense*> senses;
 };
 
-class WordEx
+class WordEx : public Word
 {
 public:
     WordEx(QString _word);
     ~WordEx();
-    QString getSpelling();
+
     void addCategory(WordCategory *category);
     QList<WordCategory *> *getCategories();
 
+    //shortcuts to access the first elements
+    QString getCategory();
+    QString getDefinition();
+    QString getSample();
+    QString getAudio();
+
+    void pronounceWord();
+    void pronounceWordAlt();
+    void pronounceCategory(bool online);
+    void pronounceDefinition(bool online);
+    void pronounceSample(bool online);
+
 private:
-    QString mSpelling;
+    Speaker speaker;
     QList<WordCategory *>categories;
-
-
 };
 
 #endif // WORDEX_H
