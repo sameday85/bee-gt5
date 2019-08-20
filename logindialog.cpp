@@ -11,7 +11,7 @@ LoginDialog::LoginDialog(QWidget * parent) :
     //https://stackoverflow.com/questions/21635427/how-to-set-qdialog-width-and-height-and-allow-automatic-window-placement
     int nWidth = 400;
     int nHeight= 200;
-    if (parent != NULL)
+    if (parent != nullptr)
         setGeometry(parent->x() + parent->width()/2 - nWidth/2,
                     parent->y() + parent->height()/2 - nHeight/2,
                     nWidth, nHeight);

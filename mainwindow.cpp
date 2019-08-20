@@ -138,14 +138,14 @@ void MainWindow::login() {
 }
 
 void MainWindow::viewStatistics() {
-    if ((mMode == MODE_NA) || (classRoom == NULL))
+    if ((mMode == MODE_NA) || (classRoom == nullptr))
         return;
 
     saveTodayStats();
     Statistics *perDict = mDbManager->findDictStatsBy(mUserId, mDictId);
     Statistics *lifetime= mDbManager->findLifetimeStatsBy(mUserId);
     StatisticsDialog* statsDialog = new StatisticsDialog( this,
-                                                          (mMode == MODE_LEARNING) ? NULL : classRoom->getStatistic(), //today stats
+                                                          (mMode == MODE_LEARNING) ? nullptr : classRoom->getStatistic(), //today stats
                                                           perDict,
                                                           lifetime,
                                                           mDbManager->findDailyStatsBy(mUserId));
@@ -165,7 +165,7 @@ void MainWindow::logout() {
         classRoom->dismiss();
 
         delete classRoom;
-        classRoom = NULL;
+        classRoom = nullptr;
     }
     if (mMode != MODE_NA) {
         mMode = MODE_NA;
@@ -274,7 +274,7 @@ void MainWindow::saveSettings() {
 }
 
 void MainWindow::saveTodayStats() {
-    if (classRoom == NULL)
+    if (classRoom == nullptr)
         return;
     if (mMode != MODE_PRACTICE && mMode != MODE_QUIZ && mMode != MODE_LEARNING)
         return;

@@ -78,8 +78,9 @@ qlonglong DbManager::insertDictIf(QString dictName) {
 qlonglong DbManager::insertStat(qlonglong userId, qlonglong dictId, int asked, int answered) {
     if (asked <= 0 || userId <= 0 || dictId <= 0)
         return 0;
-    qlonglong ms = QDateTime::currentDateTime().toMSecsSinceEpoch();
-    qlonglong day = ms / MS_IN_DAY;
+    QDateTime now = QDateTime::currentDateTime();
+    qlonglong ms = now.toMSecsSinceEpoch();
+    qlonglong day = (ms + now.offsetFromUtc()*1000) / MS_IN_DAY;
 
     QSqlQuery query(mDb);
     query.prepare("INSERT INTO stats (time, day, user_id, dict_id, asked, answered) VALUES (?,?,?,?,?,?)");

@@ -7,6 +7,7 @@
 Speaker::Speaker()
 {
     player = new QMediaPlayer();
+    loop = nullptr;
 }
 
 Speaker::~Speaker() {
@@ -21,8 +22,10 @@ void Speaker::stateChanged(QMediaPlayer::State state) {
 }
 
 int Speaker::play_offline( QString audio_file) {
-    player->stop();
+    if (loop)
+        return 1;
 
+    player->stop();
     loop = new QEventLoop();
 
     connect(player, SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(stateChanged(QMediaPlayer::State)));
@@ -32,6 +35,7 @@ int Speaker::play_offline( QString audio_file) {
 
     loop->exec();
     delete loop;
+    loop = nullptr;
 
     return 0;
     /*
