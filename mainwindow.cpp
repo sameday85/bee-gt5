@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QMessageBox>
+#include <QProgressDialog>
+#include <QFileDialog>
 #include <QSettings>
 #include <QDir>
 #include <qtimer.h>
@@ -43,6 +45,8 @@ void MainWindow::createMenus()
     userMenu->addAction(loginAct);
     userMenu->addAction(statsAct);
     userMenu->addAction(retryAct);
+    userMenu->addSeparator();
+    userMenu->addAction(toolAct);
     userMenu->addSeparator();
     userMenu->addAction(aboutAct);
 
@@ -93,6 +97,10 @@ void MainWindow::createActions()
     retryAct->setStatusTip(tr("Try again"));
     connect(retryAct, &QAction::triggered, this, &MainWindow::retry);
 
+    toolAct = new QAction(tr("Tool..."), this);
+    toolAct->setStatusTip(tr("Conversion tool"));
+    connect(toolAct, &QAction::triggered, this, &MainWindow::convert);
+
     aboutAct = new QAction(tr("About..."), this);
     aboutAct->setStatusTip(tr("About Everyday Spelling Bee"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::sayHello);
@@ -110,6 +118,65 @@ void MainWindow::sayHello() {
     layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
 
     msgBox.exec();
+}
+//convert work list txt file to dictionary xml file
+void MainWindow::convert() {
+    QString fileName = QFileDialog::getOpenFileName(this,
+                            tr("Word List Text File"), "", tr("Text Files (*.txt)"));
+    //User cancelled
+    if (fileName == nullptr)
+        return;
+    //file does not exit
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return;
+    }
+    //load in all words
+    QStringList words;
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if (line.isEmpty())
+            break;
+        words.append(line);
+    }
+    file.close();
+
+    QString msg = QString::asprintf("Total words %d. Converting, please wait ...", words.count());
+    QProgressDialog progress(msg, "Cancel", 0, words.count(), this);
+    progress.setWindowModality(Qt::WindowModal);
+
+    QString dictPath=QString::asprintf("%s/%s/", szApplicationDir, FOLDER_DICT);
+    QString outputFileName = dictPath + "/" + QFileInfo(fileName).completeBaseName() + ".xml";
+    //create output file
+    QFile outputFile(outputFileName);
+    if (outputFile.open(QIODevice::ReadWrite)) {
+        QTextStream ts(&outputFile);
+        ts << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl;
+        ts << "<words>" << endl;
+        for (int i = 0; i < words.count(); ++i) {
+            QString line = words.at(i);
+            WordEx word(line);
+            DictHelper *helper = new DictHelper(word.getSpelling());
+            helper->downloadOnline(&word);
+            delete helper;
+
+            QString xmlSlice=QString::asprintf("<word grade=\"%d\">\r\n", 0);
+            xmlSlice += "  <spelling>" + word.getSpelling().trimmed() + "</spelling>\r\n";
+            xmlSlice += "  <category>" + word.getCategory().trimmed() + "</category>\r\n";
+            xmlSlice += "  <definitions>" + word.getDefinition().trimmed() + "</definitions>\r\n";
+            xmlSlice += "  <example>" + word.getSample().trimmed() + "</example>\r\n";
+            xmlSlice += "  <audio>" + word.getAudio().trimmed() + "</audio>\r\n";
+            xmlSlice += "</word>\r\n";
+            ts << xmlSlice;
+
+            progress.setValue(i+1);
+            if (progress.wasCanceled())
+                break;
+        }
+        ts << "</words>" << endl;
+        outputFile.close();
+    }
 }
 
 void MainWindow::loginOrLogout() {
@@ -337,7 +404,7 @@ void MainWindow::onUpdateUi() {
     retryAct->setEnabled(mDone && (mMode == MODE_QUIZ || mMode == MODE_PLACE));
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);
-    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : mDictionary);
+    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : QString::asprintf("%s, total %d word", mDictionary.toStdString().c_str(), classRoom->getTotalWordsSelected()));
     ui->lineEditWord->setText("");
     ui->labelStats->setText("");
 

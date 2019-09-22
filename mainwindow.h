@@ -26,6 +26,7 @@ protected:
 
 public slots:
     void sayHello();
+    void convert();
     void slotOnLogin(QString&,QString&, int&, int&);
     void slotOnResetStats();
 
@@ -41,6 +42,7 @@ private:
     QMenu *userMenu;
     QAction *loginAct;
     QAction *retryAct;
+    QAction *toolAct;
     QAction *aboutAct;
     QAction *statsAct;
 
