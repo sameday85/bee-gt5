@@ -3,9 +3,10 @@
 #include "dicthelper.h"
 #include "common.h"
 
-DictHelper::DictHelper(QString word)
+#define MAX_CHAR_ASCII      128
+
+DictHelper::DictHelper()
 {
-    mWord = word.toLower();
 }
 
 void DictHelper::loadCredentials() {
@@ -35,16 +36,17 @@ void DictHelper::loadCredentials() {
    file.close();
 }
 
-WordEx * DictHelper::download() {
+bool DictHelper::download(WordEx* theWord) {
+    mWord = theWord->getSpelling().toLower();
     if (mWord.isEmpty())
-        return nullptr;
-    WordEx *theWord = new WordEx(mWord);
+        return false;
+    bool ret = false;
     this->loadCredentials();
     if (!mApiKey.isEmpty() && !mApiId.isEmpty()) {
         if (!downloadByApi(theWord))
-            downloadOnline(theWord);
+            ret = downloadOnline(theWord);
     }
-    return theWord;
+    return ret;
 }
 
 bool DictHelper::downloadByApi(WordEx *word) {
@@ -99,6 +101,12 @@ bool DictHelper::downloadByApi(WordEx *word) {
 }
 
 bool DictHelper::downloadOnline(WordEx *word) {
+    mWord = word->getSpelling().toLower();;
+    for (int i = 0; i < mWord.length(); ++i) {
+        QChar ch = mWord.at(i);
+        if (ch.unicode() <= 0 || ch.unicode() >= MAX_CHAR_ASCII)
+            return false;
+    }
     QString url = QString::asprintf("https://www.lexico.com/en/definition/%s", mWord.toStdString().c_str());
     UrlConnection urlConnection;
     QString page = urlConnection.download2String(url);
@@ -107,8 +115,8 @@ bool DictHelper::downloadOnline(WordEx *word) {
     QString example = parseExample(page);
     QString audio = parseAudio(page);
 
-    if (category.isEmpty() && definition.isEmpty())
-        return false;
+    //if (category.isEmpty() && definition.isEmpty())
+    //    return false;
     WordCategory *wordCategory = new WordCategory(category, audio);
     wordCategory->addSense(new WordSense(definition, example));
     word->addCategory(wordCategory);
@@ -130,7 +138,7 @@ QString DictHelper::parseCategory(QString content) {
         return category;
 
     QStringList list = category.split(" ");
-    return list.at(0).trimmed();
+    return sanitize(list.at(0).trimmed());
 }
 
 QString DictHelper::parseDefinitions(QString content, QString word) {
@@ -144,7 +152,7 @@ QString DictHelper::parseDefinitions(QString content, QString word) {
         definitions = content.mid(pos, pos2 - pos);
     }
     definitions = definitions.replace("&#39;", "'");
-    return definitions;
+    return sanitize(definitions);
 }
 
 QString DictHelper::parseExample(QString content) {
@@ -162,7 +170,7 @@ QString DictHelper::parseExample(QString content) {
             }
         }
     }
-    return example;
+    return sanitize(example);
 }
 
 QString DictHelper::parseAudio(QString content) {
@@ -176,5 +184,18 @@ QString DictHelper::parseAudio(QString content) {
         audio = content.mid(pos, pos2 - pos);
     }
 
-    return audio;
+    return sanitize(audio);
+}
+
+QString DictHelper::sanitize(QString str) {
+    QString ret="";
+    for (int i = 0; i < str.length(); ++i) {
+        QChar ch = str.at(i);
+        if (ch.unicode() > 0 && ch.unicode() < MAX_CHAR_ASCII)
+            ret.append(ch);
+        else {
+            ret.append(" ");
+        }
+    }
+    return ret;
 }

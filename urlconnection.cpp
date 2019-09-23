@@ -78,7 +78,7 @@ bool UrlConnection::saveToDisk(const QString &filename, QNetworkReply *reply)
 }
 
 QString UrlConnection::saveToString(QNetworkReply *reply) {
-    QString content = QString(reply->readAll());
+    QString content = QString::fromUtf8(reply->readAll());
     reply->deleteLater();
 
     return content;

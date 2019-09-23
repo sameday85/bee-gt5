@@ -150,31 +150,30 @@ void MainWindow::convert() {
     QString outputFileName = dictPath + "/" + QFileInfo(fileName).completeBaseName() + ".xml";
     //create output file
     QFile outputFile(outputFileName);
-    if (outputFile.open(QIODevice::ReadWrite)) {
-        QTextStream ts(&outputFile);
-        ts << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl;
-        ts << "<words>" << endl;
+    if (outputFile.open(QIODevice::Truncate|QIODevice::WriteOnly)) {
+        outputFile.write(QString("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n").toUtf8());
+        outputFile.write(QString("<words>\r\n").toUtf8());
         for (int i = 0; i < words.count(); ++i) {
             QString line = words.at(i);
             WordEx word(line);
-            DictHelper *helper = new DictHelper(word.getSpelling());
-            helper->downloadOnline(&word);
+            DictHelper *helper = new DictHelper();
+            bool ret = helper->downloadOnline(&word);
             delete helper;
-
-            QString xmlSlice=QString::asprintf("<word grade=\"%d\">\r\n", 0);
-            xmlSlice += "  <spelling>" + word.getSpelling().trimmed() + "</spelling>\r\n";
-            xmlSlice += "  <category>" + word.getCategory().trimmed() + "</category>\r\n";
-            xmlSlice += "  <definitions>" + word.getDefinition().trimmed() + "</definitions>\r\n";
-            xmlSlice += "  <example>" + word.getSample().trimmed() + "</example>\r\n";
-            xmlSlice += "  <audio>" + word.getAudio().trimmed() + "</audio>\r\n";
-            xmlSlice += "</word>\r\n";
-            ts << xmlSlice;
-
+            if (ret) {
+                QString xmlSlice=QString::asprintf("<word grade=\"%d\">\r\n", 0);
+                xmlSlice += "  <spelling>" + word.getSpelling().trimmed() + "</spelling>\r\n";
+                xmlSlice += "  <category>" + word.getCategory().trimmed() + "</category>\r\n";
+                xmlSlice += "  <definitions>" + word.getDefinition().trimmed() + "</definitions>\r\n";
+                xmlSlice += "  <example>" + word.getSample().trimmed() + "</example>\r\n";
+                xmlSlice += "  <audio>" + word.getAudio().trimmed() + "</audio>\r\n";
+                xmlSlice += "</word>\r\n";
+                outputFile.write(xmlSlice.toUtf8());
+            }
             progress.setValue(i+1);
             if (progress.wasCanceled())
                 break;
         }
-        ts << "</words>" << endl;
+        outputFile.write(QString("</words>\r\n").toUtf8());
         outputFile.close();
     }
 }
@@ -429,15 +428,17 @@ void MainWindow::showPlaceResult(QLabel *label, int finishedGrade) {
 }
 
 void MainWindow::lookup(QString spelling) {
-    DictHelper helper(spelling);
-    WordEx *theWord = helper.download();
-    if (theWord) {
+    WordEx *theWord = new WordEx(spelling);
+    DictHelper helper;
+    bool ret = helper.download(theWord);
+    if (ret) {
         showWordEx(theWord);
-        delete theWord;
     }
     else {
         ui->textEdit->setText(spelling);
     }
+    delete theWord;
+
     Speaker speaker;
     speaker.read_sentence_online(spelling);
 }

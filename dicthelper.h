@@ -8,8 +8,8 @@
 class DictHelper
 {
 public:
-    DictHelper(QString word);
-    WordEx* download();
+    DictHelper();
+    bool download(WordEx*);
 
     QString getCategory() const;
     QString getDefinitions() const;
@@ -31,6 +31,8 @@ private:
     QString parseDefinitions(QString content, QString word);
     QString parseExample(QString content);
     QString parseAudio(QString content);
+
+    QString sanitize(QString str);
 };
 
 #endif // DICTHELPER_H

@@ -266,7 +266,7 @@ void ClassRoom::downloadWordOnlineIf(WordEx *word) {
     if (!word->getDefinition().isEmpty() || !word->getCategory().isEmpty())
         return;
 
-    DictHelper *helper = new DictHelper(word->getSpelling());
+    DictHelper *helper = new DictHelper();
     helper->downloadOnline(word); //Oxford api does not work anymore
     delete helper;
 }
