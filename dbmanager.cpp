@@ -174,15 +174,28 @@ int DbManager::getPositionBy(qlonglong userId, qlonglong dictId, int grade, int 
 }
 
 void DbManager::updatePositionBy(qlonglong userId, qlonglong dictId, int grade, int mode, int pos) {
-    int old = getPositionBy(userId, dictId, grade, mode, -1);
-    if (old >= 0) {
+    if (pos < 0)
+        return;
+
+    long long id = 0;
+    {
         QSqlQuery query(mDb);
-        query.prepare("update progs set pos=? where user_id=? and dict_id=? and grade=? and mode=?");
-        query.addBindValue(pos);
+        query.prepare("select id from progs where user_id=? and dict_id=? and grade=? and mode=?");
         query.addBindValue(userId);
         query.addBindValue(dictId);
         query.addBindValue(grade);
         query.addBindValue(mode);
+        query.exec();
+        if (query.next()) {
+            id = query.value(0).toLongLong();
+        }
+        query.finish();
+    }
+    if (id > 0) {
+        QSqlQuery query(mDb);
+        query.prepare("update progs set pos=? where id=?");
+        query.addBindValue(pos);
+        query.addBindValue(id);
         query.exec();
     }
     else {
