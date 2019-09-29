@@ -11,6 +11,7 @@ ClassRoom::ClassRoom(QString &username, QString& dictionary, int& mode)
     mUsername = username;
     mDictionary = dictionary;
     mMode = mode;
+    selected = 0;
 
     loadDictionary();
 }

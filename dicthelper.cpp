@@ -40,13 +40,15 @@ bool DictHelper::download(WordEx* theWord) {
     mWord = theWord->getSpelling().toLower();
     if (mWord.isEmpty())
         return false;
+    return downloadOnline(theWord);
+    /*
     bool ret = false;
     this->loadCredentials();
     if (!mApiKey.isEmpty() && !mApiId.isEmpty()) {
         if (!downloadByApi(theWord))
             ret = downloadOnline(theWord);
     }
-    return ret;
+    return ret;*/
 }
 
 bool DictHelper::downloadByApi(WordEx *word) {
@@ -151,6 +153,16 @@ QString DictHelper::parseDefinitions(QString content, QString word) {
         int pos2 = content.indexOf("\"", pos);
         definitions = content.mid(pos, pos2 - pos);
     }
+    else {
+        //<span class="ind">.....</span>
+        tag = "<span class=\"ind\">";
+        pos = content.indexOf(tag);
+        if (pos > 0) {
+            pos += tag.length();
+            int pos2 = content.indexOf("</span>", pos);
+            definitions = content.mid(pos, pos2 - pos);
+        }
+    }
     definitions = definitions.replace("&#39;", "'");
     return sanitize(definitions);
 }
@@ -191,7 +203,10 @@ QString DictHelper::sanitize(QString str) {
     QString ret="";
     for (int i = 0; i < str.length(); ++i) {
         QChar ch = str.at(i);
-        if (ch.unicode() > 0 && ch.unicode() < MAX_CHAR_ASCII)
+        if (ch == '<' || ch == '>') {
+            ret.append(" ");
+        }
+        else if (ch.unicode() > 0 && ch.unicode() < MAX_CHAR_ASCII)
             ret.append(ch);
         else {
             ret.append(" ");

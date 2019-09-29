@@ -160,7 +160,7 @@ void MainWindow::convert() {
             bool ret = helper->downloadOnline(&word);
             delete helper;
             if (ret) {
-                QString xmlSlice=QString::asprintf("<word grade=\"%d\">\r\n", 0);
+                QString xmlSlice=QString::asprintf("<word idx=\"%d\" grade=\"%d\">\r\n", i+1, 0);
                 xmlSlice += "  <spelling>" + word.getSpelling().trimmed() + "</spelling>\r\n";
                 xmlSlice += "  <category>" + word.getCategory().trimmed() + "</category>\r\n";
                 xmlSlice += "  <definitions>" + word.getDefinition().trimmed() + "</definitions>\r\n";
