@@ -12,8 +12,13 @@ ClassRoom::ClassRoom(QString &username, QString& dictionary, int& mode)
     mDictionary = dictionary;
     mMode = mode;
     selected = 0;
+    dbManager = nullptr;
 
     loadDictionary();
+}
+
+void ClassRoom::setDbManger(DbManager *manager) {
+    dbManager = manager;
 }
 
 int ClassRoom::prepare(int forGrade, int progress) {
@@ -264,10 +269,9 @@ void ClassRoom::downloadWordOnlineIf(WordEx *word) {
     if (word->getTriedDownload())
         return;
     word->setTriedDownload(true);
-    if (!word->getDefinition().isEmpty() && !word->getCategory().isEmpty())
-        return;
-
-    DictHelper *helper = new DictHelper();
-    helper->downloadOnline(word); //Oxford api does not work anymore
-    delete helper;
+    if (word->getDefinition().isEmpty() || word->getCategory().isEmpty()) {
+        DictHelper *helper = new DictHelper();
+        helper->download(word, dbManager);
+        delete helper;
+    }
 }

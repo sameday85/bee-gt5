@@ -36,10 +36,15 @@ void DictHelper::loadCredentials() {
    file.close();
 }
 
-bool DictHelper::download(WordEx* theWord) {
+bool DictHelper::download(WordEx* theWord, DbManager *manager) {
     mWord = theWord->getSpelling().toLower();
     if (mWord.isEmpty())
         return false;
+
+    theWord->resetCategory();
+    int got = manager ?  manager->loadWord(theWord) : 0;
+    if (got > 0)
+        return true;
     return downloadOnline(theWord);
     /*
     bool ret = false;
@@ -119,7 +124,6 @@ bool DictHelper::downloadOnline(WordEx *word) {
 
     //if (category.isEmpty() && definition.isEmpty())
     //    return false;
-    word->resetCategory();
     WordCategory *wordCategory = new WordCategory(category, audio);
     wordCategory->addSense(new WordSense(definition, example));
     word->addCategory(wordCategory);

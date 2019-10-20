@@ -7,6 +7,7 @@
 #include <QSqlQuery>
 #include <qvector.h>
 #include "statistics.h"
+#include "wordex.h"
 
 class DbManager
 {
@@ -25,6 +26,7 @@ public:
     void resetDictStatsBy(qlonglong userId, qlonglong dictId);
     int getPositionBy(qlonglong userId, qlonglong dictId, int grade, int mode,  int def);
     void updatePositionBy(qlonglong userId, qlonglong dictId, int grade, int mode, int pos);
+    int loadWord(WordEx *word);
 
 private:
     QString mDbName;

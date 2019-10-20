@@ -113,7 +113,7 @@ void MainWindow::sayHello() {
     msgBox.setInformativeText("Version 1.0.0\r\nCopyright(c) 2019. All rights reserved.");
     msgBox.setStandardButtons(QMessageBox::Ok);
 
-    QGridLayout* layout = (QGridLayout*)msgBox.layout();
+    QGridLayout* layout = dynamic_cast<QGridLayout*>(msgBox.layout());
     QSpacerItem* horizontalSpacer = new QSpacerItem(460, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
     layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
 
@@ -157,7 +157,7 @@ void MainWindow::convert() {
             QString line = words.at(i);
             WordEx word(line);
             DictHelper *helper = new DictHelper();
-            bool ret = helper->downloadOnline(&word);
+            bool ret = helper->download(&word, nullptr);
             delete helper;
             if (ret) {
                 QString xmlSlice=QString::asprintf("<word idx=\"%d\" grade=\"%d\">\r\n", i+1, 0);
@@ -297,6 +297,7 @@ void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, 
         if (mMode == MODE_PLACE)
             mDictionary=DEFAULT_DICT;
         classRoom = new ClassRoom(mUsername, mDictionary, mMode);
+        classRoom->setDbManger(mDbManager);
         onStart();
     }
     onUpdateUi();
@@ -429,8 +430,9 @@ void MainWindow::showPlaceResult(QLabel *label, int finishedGrade) {
 
 void MainWindow::lookup(QString spelling) {
     WordEx *theWord = new WordEx(spelling);
+
     DictHelper helper;
-    bool ret = helper.download(theWord);
+    bool ret = helper.download(theWord, mDbManager);
     if (ret) {
         showWordEx(theWord);
     }

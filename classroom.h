@@ -9,6 +9,7 @@
 #include "wordex.h"
 #include "speaker.h"
 #include "statistics.h"
+#include "dbmanager.h"
 
 class ClassRoom : public QObject
 {
@@ -24,6 +25,8 @@ public:
 
     Statistics *getStatistic();
     int getFinishedGrade();
+
+    void setDbManger(DbManager *manager);
 
 private:
     void loadDictionary();
@@ -49,6 +52,8 @@ private:
 
     int failures;
     bool tried;
+
+    DbManager *dbManager;
 
 public slots:
     int present();

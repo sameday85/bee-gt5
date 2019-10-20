@@ -218,3 +218,25 @@ void DbManager::resetDictStatsBy(qlonglong userId, qlonglong dictId) {
     query.exec();
 }
 
+//the table "entries" needs to be manually imported into the db by running the entries.sql
+int DbManager::loadWord(WordEx *word) {
+    QSqlQuery query(mDb);
+    query.prepare("select wordtype, definition from entries where word=? COLLATE NOCASE");
+    query.addBindValue(word->getSpelling());
+    query.exec();
+    int definitions = 0;
+    while (query.next()) {
+        QString category = query.value(0).toString();
+        QString definition= query.value(1).toString();
+
+        WordCategory *wordCategory = new WordCategory(category, "");
+        wordCategory->addSense(new WordSense(definition, ""));
+        word->addCategory(wordCategory);
+
+        ++definitions;
+    }
+    query.finish();
+
+    return definitions;
+}
+
