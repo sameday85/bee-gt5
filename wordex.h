@@ -41,6 +41,7 @@ public:
     ~WordEx();
 
     void addCategory(WordCategory *category);
+    void resetCategory();
     QList<WordCategory *> *getCategories();
 
     //shortcuts to access the first elements

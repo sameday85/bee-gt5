@@ -119,6 +119,7 @@ bool DictHelper::downloadOnline(WordEx *word) {
 
     //if (category.isEmpty() && definition.isEmpty())
     //    return false;
+    word->resetCategory();
     WordCategory *wordCategory = new WordCategory(category, audio);
     wordCategory->addSense(new WordSense(definition, example));
     word->addCategory(wordCategory);

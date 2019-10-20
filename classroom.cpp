@@ -264,7 +264,7 @@ void ClassRoom::downloadWordOnlineIf(WordEx *word) {
     if (word->getTriedDownload())
         return;
     word->setTriedDownload(true);
-    if (!word->getDefinition().isEmpty() || !word->getCategory().isEmpty())
+    if (!word->getDefinition().isEmpty() && !word->getCategory().isEmpty())
         return;
 
     DictHelper *helper = new DictHelper();

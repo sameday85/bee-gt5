@@ -51,6 +51,10 @@ WordEx::WordEx(QString _word) : Word(_word) {
 }
 
 WordEx::~WordEx() {
+    resetCategory();
+}
+
+void WordEx::resetCategory() {
     for (int i = 0; i < categories.count(); ++i)
         delete categories.at(i);
     categories.clear();
