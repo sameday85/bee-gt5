@@ -37,6 +37,9 @@ MainWindow::MainWindow(QWidget *parent) :
     mDbManager->createDbIf();
     mStatId = mUserId = mDictId = 0;
     mPendingTimer = 0;
+
+    mMainWindowInactive = false;
+    mInactiveWarnings = 0;
 }
 
 void MainWindow::createMenus()
@@ -70,6 +73,17 @@ void MainWindow::showEvent(QShowEvent *event) {
 void MainWindow::closeEvent(QCloseEvent *event) {
     logout();
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::changeEvent(QEvent *event) {
+    QWidget::changeEvent(event);
+    if (event->type() == QEvent::ActivationChange) {
+        mMainWindowInactive =  !this->isActiveWindow();
+        if (mMainWindowInactive && (mMode != MODE_NA)) {
+            ++mInactiveWarnings;
+            QTimer::singleShot(500, this, SLOT(warning()));
+        }
+    }
 }
 
 MainWindow::~MainWindow()
@@ -404,7 +418,7 @@ void MainWindow::onUpdateUi() {
     retryAct->setEnabled(mDone && (mMode == MODE_QUIZ || mMode == MODE_PLACE));
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);
-    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : QString::asprintf("%s, total %d word", mDictionary.toStdString().c_str(), classRoom->getTotalWordsSelected()));
+    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : QString::asprintf("%s. Grade %d. Total %d/%d words", mDictionary.toStdString().c_str(), mGrade, classRoom->getTotalWordsSelected(), classRoom->getTotalWords()));
     ui->lineEditWord->setText("");
     ui->labelStats->setText("");
 
@@ -489,4 +503,13 @@ void MainWindow::showWordEx(WordEx *word) {
         }
     }
     ui->textEdit->setText(content);
+}
+
+void MainWindow::warning() {
+    int thisWarning = mInactiveWarnings;
+    while (mMainWindowInactive && mMode != MODE_NA && !mPaused && (thisWarning == mInactiveWarnings)) {
+        Speaker speaker;
+        QString path = QString::asprintf("%s/%s", szApplicationDir, "warning.mp3");
+        speaker.play_offline(path);
+    }
 }

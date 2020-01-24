@@ -20,6 +20,7 @@ public:
     int adjustGrade(int grade);
     void dismiss();
     int getTotalWordsSelected();
+    int getTotalWords();
     int getProgress();
     WordEx* getCurrentWord();
 
@@ -30,9 +31,9 @@ public:
 
 private:
     void loadDictionary();
-    void say(QString mp3);
     void chooseWords(int max, bool random);
     void downloadWordOnlineIf(WordEx *word);
+    void say(QString mp3);
 
 private:
     Speaker speaker;
@@ -43,6 +44,7 @@ private:
     QString mDictionary;
     int mGrade;
     int mMode;
+    int mMaxGrade;
 
     bool multipleGradeSupported;
     bool started;

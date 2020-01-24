@@ -6,6 +6,9 @@
 #define PLACEMENT_CORRECT_PTG           80
 #define PLACEMENT_WORDS_EACH_GRADE      10
 
+#define WORDS_PER_GRADE                 100
+#define MAX_GRADE                       8
+
 ClassRoom::ClassRoom(QString &username, QString& dictionary, int& mode)
 {
     mUsername = username;
@@ -51,6 +54,8 @@ int ClassRoom::prepare(int forGrade, int progress) {
 }
 
 int ClassRoom::adjustGrade(int grade) {
+    if (grade > mMaxGrade)
+        grade = mMaxGrade;
     return multipleGradeSupported ? grade : 0;
 }
 
@@ -85,6 +90,10 @@ WordEx* ClassRoom::getCurrentWord() {
 
 int ClassRoom::getTotalWordsSelected() {
     return selectedTotal;
+}
+
+int ClassRoom::getTotalWords() {
+    return mWordList.size();
 }
 
 int ClassRoom::getFinishedGrade() {
@@ -207,6 +216,7 @@ void ClassRoom::loadDictionary () {
     QXmlStreamReader *xmlReader = new QXmlStreamReader(&file);
     //Parse the XML until we reach end of it
     QString spelling, category, definition, example, audio;
+    mMaxGrade = 0;
     int grade = 0;
     while(!xmlReader->atEnd() && !xmlReader->hasError()) {
             // Read next element
@@ -243,6 +253,12 @@ void ClassRoom::loadDictionary () {
             else if (token == QXmlStreamReader::EndElement) {
                 if(xmlReader->name() == "word") {
                     if (!spelling.isEmpty()) {
+                        if (grade <= 0) {
+                            //set default grade base on the word index
+                            grade = (mWordList.size() / WORDS_PER_GRADE) + 1;
+                            if (grade > MAX_GRADE)
+                                grade = MAX_GRADE;
+                        }
                         WordEx * word = new WordEx(spelling);
                         word->setGrade(grade);
 
@@ -251,12 +267,15 @@ void ClassRoom::loadDictionary () {
                         word->addCategory(wordCategory);
 
                         mWordList.append(word);
+
+                        if (grade > mMaxGrade)
+                            mMaxGrade = grade;
                     }
                 }
             }
     }
     delete xmlReader;
-
+    multipleGradeSupported = true;
     file.close();
 }
 

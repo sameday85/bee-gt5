@@ -23,6 +23,7 @@ public:
 protected:
     void showEvent(QShowEvent *ev);
     void closeEvent(QCloseEvent *event);
+    void changeEvent(QEvent *event);
 
 public slots:
     void sayHello();
@@ -56,7 +57,11 @@ private slots:
     void afterPresent();
     void autoAdvance();
 
+    void warning();
+
 private:
+    bool mMainWindowInactive;
+    int  mInactiveWarnings;
     DbManager *mDbManager;
     ClassRoom *classRoom;
     QString mDictionary;
