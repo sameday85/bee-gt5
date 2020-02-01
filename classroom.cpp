@@ -35,7 +35,6 @@ int ClassRoom::prepare(int forGrade, int progress) {
 
     stats.reset();
     switch (mMode) {
-    case MODE_PRACTICE:
     case MODE_LEARNING:
         chooseWords(0, false);
         selected = progress;
@@ -44,10 +43,6 @@ int ClassRoom::prepare(int forGrade, int progress) {
         break;
     case MODE_QUIZ:
         chooseWords(0, true);
-        break;
-    case MODE_PLACE:
-        mGrade = 1;
-        chooseWords(PLACEMENT_WORDS_EACH_GRADE, true);
         break;
     }
     return mWordList.size();
@@ -116,24 +111,14 @@ int ClassRoom::present() {
         started = true;
     }
     if (selected >= selectedTotal) {
-        if (mMode == MODE_PRACTICE)
-            selected = 0; //restart
-        else if (mMode == MODE_QUIZ)
+        selected = 0;
+        if (mMode == MODE_QUIZ)
             return RC_FINISHED_ALL;
-        else if (mMode == MODE_PLACE) {
-            if (stats.getCorrectPercentage() < PLACEMENT_CORRECT_PTG)
-                return RC_FINISHED_ALL;
-            if (++mGrade <= 8) {
-                chooseWords(PLACEMENT_WORDS_EACH_GRADE, true);
-                stats.reset();
-            }
-            else {
-                return RC_FINISHED_ALL;
-            }
-        }
     }
     currentWord = mWordList.at(index[selected]);
-    currentWord->pronounceWord();
+    this->downloadWordOnlineIf(currentWord);
+    if (mMode != MODE_LEARNING)
+        currentWord->pronounceWord();
 
     failures = 0; tried = false;
     return RC_OK;
@@ -178,7 +163,7 @@ int ClassRoom::onAnswer(QString answer) {
     }
     else if (answer == "?") {
         downloadWordOnlineIf(currentWord);
-        ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
+        ret = RC_SKIP;
         ++failures;
     }
     else if (QString::compare(answer, currentWord->getSpelling(), Qt::CaseInsensitive) == 0) {
@@ -190,7 +175,7 @@ int ClassRoom::onAnswer(QString answer) {
     }
     else {
         ++failures;
-        ret = (mMode == MODE_PRACTICE) ? RC_FAILED : RC_SKIP;
+        ret = RC_SKIP;
         say("sorry.wav");
     }
     return ret;

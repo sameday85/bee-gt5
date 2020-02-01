@@ -105,7 +105,6 @@ public slots:
     void slotAcceptAbort();
     void slotAcceptPractice();
     void slotAcceptQuiz();
-    void slotAcceptPlacement();
     void slotAcceptLearning();
 
 private:

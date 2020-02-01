@@ -12,7 +12,7 @@
 #include "dicthelper.h"
 
 #define DEFAULT_DICT        "2018.xml"
-#define AUTO_DELAY          10000   //ms
+#define AUTO_DELAY          4000   //ms
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -288,10 +288,6 @@ void MainWindow::onEnterKey() {
                     retryAct->setEnabled(true);
                     showStats(ui->labelStats, classRoom->getStatistic());
                 }
-                else if (mMode == MODE_PLACE) {
-                    retryAct->setEnabled(true);
-                    showPlaceResult(ui->labelStats, classRoom->getFinishedGrade());
-                }
             }
         }
     }
@@ -308,8 +304,6 @@ void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, 
         mUserId = mDbManager->insertUserIf(mUsername);
         mDictId = mDbManager->insertDictIf(mDictionary);
         mStatId = 0;
-        if (mMode == MODE_PLACE)
-            mDictionary=DEFAULT_DICT;
         classRoom = new ClassRoom(mUsername, mDictionary, mMode);
         classRoom->setDbManger(mDbManager);
         onStart();
@@ -357,10 +351,10 @@ void MainWindow::saveSettings() {
 void MainWindow::saveTodayStats() {
     if (classRoom == nullptr)
         return;
-    if (mMode != MODE_PRACTICE && mMode != MODE_QUIZ && mMode != MODE_LEARNING)
+    if (mMode != MODE_QUIZ && mMode != MODE_LEARNING)
         return;
 
-    if (mMode == MODE_PRACTICE || mMode == MODE_QUIZ) {
+    if (mMode == MODE_QUIZ) {
         Statistics *stats = classRoom->getStatistic();
         if (mStatId > 0) {
             mDbManager->updateStat(mStatId, stats->getAsked(), stats->getAnswered());
@@ -369,13 +363,13 @@ void MainWindow::saveTodayStats() {
             mStatId = mDbManager->insertStat(mUserId, mDictId, stats->getAsked(), stats->getAnswered());
         }
     }
-    if (mMode == MODE_PRACTICE || mMode == MODE_LEARNING)
+    if (mMode == MODE_LEARNING)
         mDbManager->updatePositionBy(mUserId, mDictId, mGrade, mMode, classRoom->getProgress());
 }
 
 void MainWindow::onStart() {
     mGrade = classRoom->adjustGrade(mGrade);
-    int progress = (mMode == MODE_PRACTICE || mMode == MODE_LEARNING) ? mDbManager->getPositionBy(mUserId, mDictId, mGrade, mMode, 0) : 0;
+    int progress = (mMode == MODE_LEARNING) ? mDbManager->getPositionBy(mUserId, mDictId, mGrade, mMode, 0) : 0;
     mDone = classRoom->prepare(mGrade, progress) <= 0;
     if (mGrade > 0)
         mLastGoodGrade = mGrade;
@@ -393,6 +387,7 @@ void MainWindow::onStart() {
 void MainWindow::afterPresent() {
     if (mMode == MODE_LEARNING) {
         showWord(classRoom->getCurrentWord());
+        classRoom->getCurrentWord()->pronounceWord();
         ++mPendingTimer;
         QTimer::singleShot(AUTO_DELAY, this, SLOT(autoAdvance()));
     }
@@ -415,7 +410,7 @@ void MainWindow::autoAdvance() {
 void MainWindow::onUpdateUi() {
     loginAct->setText(mMode == MODE_NA ? "Log&in..." : "Log&out");
     statsAct->setEnabled(mMode != MODE_NA);
-    retryAct->setEnabled(mDone && (mMode == MODE_QUIZ || mMode == MODE_PLACE));
+    retryAct->setEnabled(mDone && (mMode == MODE_QUIZ));
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);
     ui->labelDictionary->setText((mMode == MODE_NA) ? "" : QString::asprintf("%s. Grade %d. Total %d/%d words", mDictionary.toStdString().c_str(), mGrade, classRoom->getTotalWordsSelected(), classRoom->getTotalWords()));

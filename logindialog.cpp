@@ -51,13 +51,11 @@ void LoginDialog::setUpGUI(){
     buttons = new QDialogButtonBox( this );
     buttons->addButton( QDialogButtonBox::Ok ); //practice
     buttons->addButton( QDialogButtonBox::Open ); //quiz
-    buttons->addButton( QDialogButtonBox::Save ); //palcement
     buttons->addButton( QDialogButtonBox::Close ); //learning
 
     buttons->addButton( QDialogButtonBox::Cancel );
     buttons->button( QDialogButtonBox::Ok )->setText( tr("Practice") );
     buttons->button( QDialogButtonBox::Open )->setText( tr("Quiz") );
-    buttons->button( QDialogButtonBox::Save )->setText( tr("Placement") );
     buttons->button( QDialogButtonBox::Cancel )->setText( tr("Cancel") );
     buttons->button( QDialogButtonBox::Close )->setText( tr("Learning") );
 
@@ -76,10 +74,6 @@ void LoginDialog::setUpGUI(){
              SIGNAL (clicked()),
              this,
              SLOT (slotAcceptQuiz()) );
-    connect( buttons->button( QDialogButtonBox::Save ),
-             SIGNAL (clicked()),
-             this,
-             SLOT (slotAcceptPlacement()) );
     connect( buttons->button( QDialogButtonBox::Close ),
              SIGNAL (clicked()),
              this,
@@ -125,10 +119,6 @@ void LoginDialog::slotAcceptPractice() {
 
 void LoginDialog::slotAcceptQuiz() {
     onUserLogin(MODE_QUIZ);
-}
-
-void LoginDialog::slotAcceptPlacement() {
-    onUserLogin(MODE_PLACE);
 }
 
 void LoginDialog::slotAcceptLearning() {
