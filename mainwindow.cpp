@@ -81,7 +81,7 @@ void MainWindow::changeEvent(QEvent *event) {
         mMainWindowInactive =  !this->isActiveWindow();
         if (mMainWindowInactive && (mMode != MODE_NA)) {
             ++mInactiveWarnings;
-            QTimer::singleShot(500, this, SLOT(warning()));
+            QTimer::singleShot(500, this, SLOT(alarm()));
         }
     }
 }
@@ -279,15 +279,17 @@ void MainWindow::onEnterKey() {
         }
         if (ret == RC_CORRECT || ret == RC_SKIP) {
             ret = classRoom->present();
-            if (mMode == MODE_LEARNING)
-                afterPresent();
-            ui->progressBar->setValue(classRoom->getProgress());
             if (ret == RC_FINISHED_ALL) {
                 mDone = true;
                 if (mMode == MODE_QUIZ) {
                     retryAct->setEnabled(true);
                     showStats(ui->labelStats, classRoom->getStatistic());
                 }
+            }
+            else {
+                ui->progressBar->setValue(classRoom->getProgress());
+                if (mMode == MODE_LEARNING)
+                    afterPresent();
             }
         }
     }
@@ -351,10 +353,10 @@ void MainWindow::saveSettings() {
 void MainWindow::saveTodayStats() {
     if (classRoom == nullptr)
         return;
-    if (mMode != MODE_QUIZ && mMode != MODE_LEARNING)
+    if (mMode != MODE_PRACTICE && mMode != MODE_QUIZ && mMode != MODE_LEARNING)
         return;
 
-    if (mMode == MODE_QUIZ) {
+    if (mMode == MODE_PRACTICE || mMode == MODE_QUIZ) {
         Statistics *stats = classRoom->getStatistic();
         if (mStatId > 0) {
             mDbManager->updateStat(mStatId, stats->getAsked(), stats->getAnswered());
@@ -363,13 +365,13 @@ void MainWindow::saveTodayStats() {
             mStatId = mDbManager->insertStat(mUserId, mDictId, stats->getAsked(), stats->getAnswered());
         }
     }
-    if (mMode == MODE_LEARNING)
+    if (mMode == MODE_PRACTICE || mMode == MODE_LEARNING)
         mDbManager->updatePositionBy(mUserId, mDictId, mGrade, mMode, classRoom->getProgress());
 }
 
 void MainWindow::onStart() {
     mGrade = classRoom->adjustGrade(mGrade);
-    int progress = (mMode == MODE_LEARNING) ? mDbManager->getPositionBy(mUserId, mDictId, mGrade, mMode, 0) : 0;
+    int progress = (mMode == MODE_PRACTICE || mMode == MODE_LEARNING) ? mDbManager->getPositionBy(mUserId, mDictId, mGrade, mMode, 0) : 0;
     mDone = classRoom->prepare(mGrade, progress) <= 0;
     if (mGrade > 0)
         mLastGoodGrade = mGrade;
@@ -408,12 +410,16 @@ void MainWindow::autoAdvance() {
 }
 
 void MainWindow::onUpdateUi() {
+    QString labelGrade = "All";
+    if (mGrade > 0)
+        labelGrade = QString::asprintf("Grade %d", mGrade);
+
     loginAct->setText(mMode == MODE_NA ? "Log&in..." : "Log&out");
     statsAct->setEnabled(mMode != MODE_NA);
     retryAct->setEnabled(mDone && (mMode == MODE_QUIZ));
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);
-    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : QString::asprintf("%s. Grade %d. Total %d/%d words", mDictionary.toStdString().c_str(), mGrade, classRoom->getTotalWordsSelected(), classRoom->getTotalWords()));
+    ui->labelDictionary->setText((mMode == MODE_NA) ? "" : QString::asprintf("%s. %s. Total %d/%d words", mDictionary.toStdString().c_str(), labelGrade.toStdString().c_str(), classRoom->getTotalWordsSelected(), classRoom->getTotalWords()));
     ui->lineEditWord->setText("");
     ui->labelStats->setText("");
 
@@ -422,18 +428,7 @@ void MainWindow::onUpdateUi() {
 }
 
 void MainWindow::showStats(QLabel *label, Statistics *stats) {
-    QString info = QString::asprintf("Total: %d, Correct: %d, Correct Percentage: %.2f%%", stats->getAsked(), stats->getAnswered(), stats->getCorrectPercentage());
-    label->setText(info);
-}
-
-void MainWindow::showPlaceResult(QLabel *label, int finishedGrade) {
-    QString info;
-    if (finishedGrade <= 8) {
-        info = QString::asprintf("Your placement is grade %d.", finishedGrade);
-    }
-    else {
-        info = "You passed all grades! You should go to the next list.";
-    }
+    QString info = QString::asprintf("Total: %d, Correct: %d, Correct Percentage: %.2f%%", stats->getAsked(), stats->getAnswered(),  static_cast<double>(stats->getCorrectPercentage()));
     label->setText(info);
 }
 
@@ -461,9 +456,6 @@ void MainWindow::showHelp() {
 
 void MainWindow::showWord(WordEx *word) {
     QString spelling = word->getSpelling();
-    if (!spelling.isEmpty()) {
-        spelling.replace(0, 1, spelling[0].toUpper());
-    }
     QString category = word->getCategory();
     int pos1 = category.indexOf("(");
     int pos2 = category.indexOf(")");
@@ -480,10 +472,6 @@ void MainWindow::showWord(WordEx *word) {
 
 void MainWindow::showWordEx(WordEx *word) {
     QString spelling = word->getSpelling();
-    if (!spelling.isEmpty()) {
-        spelling.replace(0, 1, spelling[0].toUpper());
-    }
-
     QString openingTag="<p>", closingTag="</p>";
     QString content = "<h1>" + spelling + "</h1>";
     QList<WordCategory *>*categories = word->getCategories();
@@ -500,7 +488,7 @@ void MainWindow::showWordEx(WordEx *word) {
     ui->textEdit->setText(content);
 }
 
-void MainWindow::warning() {
+void MainWindow::alarm() {
     int thisWarning = mInactiveWarnings;
     while (mMainWindowInactive && mMode != MODE_NA && !mPaused && (thisWarning == mInactiveWarnings)) {
         Speaker speaker;

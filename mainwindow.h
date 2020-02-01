@@ -57,7 +57,7 @@ private slots:
     void afterPresent();
     void autoAdvance();
 
-    void warning();
+    void alarm();
 
 private:
     bool mMainWindowInactive;
@@ -80,7 +80,6 @@ private:
     void onUpdateUi();
     void showHelp();
     void showStats(QLabel *label, Statistics *stats);
-    void showPlaceResult(QLabel *label, int finishedGrade);
 };
 
 #endif // MAINWINDOW_H

@@ -3,9 +3,6 @@
 #include "classroom.h"
 #include "dicthelper.h"
 
-#define PLACEMENT_CORRECT_PTG           80
-#define PLACEMENT_WORDS_EACH_GRADE      10
-
 #define WORDS_PER_GRADE                 100
 #define MAX_GRADE                       8
 
@@ -35,6 +32,7 @@ int ClassRoom::prepare(int forGrade, int progress) {
 
     stats.reset();
     switch (mMode) {
+    case MODE_PRACTICE:
     case MODE_LEARNING:
         chooseWords(0, false);
         selected = progress;
@@ -132,27 +130,21 @@ int ClassRoom::onAnswer(QString answer) {
         stats.incAsked();
     }
     if (answer == "c") {
-        downloadWordOnlineIf(currentWord);
         currentWord->pronounceCategory(true);
     }
     else if (answer == "c!") {
-        downloadWordOnlineIf(currentWord);
         currentWord->pronounceCategory(false);
     }
     else if (answer == "d") {
-        downloadWordOnlineIf(currentWord);
         currentWord->pronounceDefinition(true);
     }
     else if (answer == "d!") {
-        downloadWordOnlineIf(currentWord);
         currentWord->pronounceDefinition(false);
     }
     else if (answer == "s") {
-        downloadWordOnlineIf(currentWord);
         currentWord->pronounceSample(true);
     }
     else if (answer == "s!") {
-        downloadWordOnlineIf(currentWord);
         currentWord->pronounceSample(false);
     }
     else if (answer == "r") {
@@ -162,11 +154,10 @@ int ClassRoom::onAnswer(QString answer) {
         currentWord->pronounceWordAlt();
     }
     else if (answer == "?") {
-        downloadWordOnlineIf(currentWord);
-        ret = RC_SKIP;
+        ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
         ++failures;
     }
-    else if (QString::compare(answer, currentWord->getSpelling(), Qt::CaseInsensitive) == 0) {
+    else if (QString::compare(answer, currentWord->getSpelling(), Qt::CaseSensitive) == 0) {
         ret = RC_CORRECT;
         if (failures <= 0) {
             stats.incAnswered();
@@ -175,7 +166,7 @@ int ClassRoom::onAnswer(QString answer) {
     }
     else {
         ++failures;
-        ret = RC_SKIP;
+        ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
         say("sorry.wav");
     }
     return ret;
