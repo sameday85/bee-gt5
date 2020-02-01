@@ -1,4 +1,3 @@
-#include "statisticsdialog.h"
 #include <QLabel>
 #include <QDateTime>
 #include <QGridLayout>
@@ -11,6 +10,7 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 #include <QDebug>
+#include "statisticsdialog.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -69,6 +69,11 @@ void StatisticsDialog::setUpGUI() {
         QBarSeries *series = new QBarSeries(this);
         series->append(set0);
         series->append(set1);
+        connect( series,
+         SIGNAL (clicked(int, QBarSet*)),
+         this,
+         SLOT (slotOnBarClicked(int, QBarSet*)));
+
 
         QChart *chart = new QChart();
         chart->addSeries(series);
@@ -193,6 +198,9 @@ void StatisticsDialog::setUpGUI() {
     //addWidget(QWidget * widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = 0)
     formGridLayout->addWidget(buttonGrp2, 3, 2, 1, 1);
 
+    labelInfo = new QLabel(this);
+    formGridLayout->addWidget(labelInfo, 3, 0, 1, 1);
+
     formGridLayout->setRowStretch(0, 4);
     formGridLayout->setRowStretch(1, 2);
     formGridLayout->setRowStretch(2, 1);
@@ -208,4 +216,14 @@ void StatisticsDialog::slotOnOk() {
 void StatisticsDialog::slotOnReset() {
     emit resetStats();
     close();
+}
+
+void StatisticsDialog::slotOnBarClicked(int index, QBarSet* barset) {
+    Q_UNUSED(barset);
+
+    Statistics *statis = breakdown->at(index);
+    QDateTime dt;
+    dt.setMSecsSinceEpoch(statis->getTime());
+
+    labelInfo->setText(QString::asprintf("%s: %d of %d",dt.toString("MM/dd").toStdString().c_str(), statis->getAnswered(), statis->getAsked()));
 }

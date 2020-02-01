@@ -1,11 +1,15 @@
 #ifndef STATISTICSDIALOG_H
 #define STATISTICSDIALOG_H
 
+#include <QtCharts/QBarSet>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QPushButton>
+#include <QLabel>
 #include <qvector.h>
 #include "statistics.h"
+
+QT_CHARTS_USE_NAMESPACE
 
 class StatisticsDialog : public QDialog
 {
@@ -21,12 +25,14 @@ private:
 public slots:
     void slotOnOk();
     void slotOnReset();
+    void slotOnBarClicked(int, QBarSet*);
 
 signals:
     void resetStats();
 
 private:
     QDialogButtonBox *buttonGrp1, *buttonGrp2;
+    QLabel *labelInfo;
 
     Statistics *stats;
     Statistics *perDictionaryStats;

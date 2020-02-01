@@ -121,6 +121,7 @@ void MainWindow::createActions()
 }
 
 void MainWindow::sayHello() {
+    //This will trigger the alarm
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("About Everyday Spelling Bee");
     msgBox.setText("Everyday Spelling Bee");
@@ -141,7 +142,7 @@ void MainWindow::convert() {
     if (fileName == nullptr)
         return;
     //file does not exit
-    QFile file(fileName);
+    QFile file(fileName, this);
     if (!file.open(QIODevice::ReadOnly)) {
         return;
     }
@@ -416,6 +417,7 @@ void MainWindow::onUpdateUi() {
 
     loginAct->setText(mMode == MODE_NA ? "Log&in..." : "Log&out");
     statsAct->setEnabled(mMode != MODE_NA);
+    toolAct->setEnabled(mMode == MODE_NA);
     retryAct->setEnabled(mDone && (mMode == MODE_QUIZ));
 
     ui->labelWelcome->setText((mMode == MODE_NA) ? "Welcome" : "Welcome " + mUsername);
