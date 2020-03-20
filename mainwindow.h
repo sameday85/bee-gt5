@@ -28,6 +28,7 @@ protected:
 public slots:
     void sayHello();
     void convert();
+    void caseOption();
     void slotOnLogin(QString&,QString&, int&, int&);
     void slotOnResetStats();
 
@@ -44,6 +45,7 @@ private:
     QAction *loginAct;
     QAction *retryAct;
     QAction *toolAct;
+    QAction *caseAct;
     QAction *aboutAct;
     QAction *statsAct;
 
@@ -72,6 +74,7 @@ private:
     bool mDone, mAutoPopup, mPaused;
     qlonglong mStatId;
     int mPendingTimer;
+    bool mCaseSensitive;
 
     void loadSettings();
     void saveSettings();

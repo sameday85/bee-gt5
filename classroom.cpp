@@ -13,12 +13,17 @@ ClassRoom::ClassRoom(QString &username, QString& dictionary, int& mode)
     mMode = mode;
     selected = 0;
     dbManager = nullptr;
+    mCaseSensitive = true;
 
     loadDictionary();
 }
 
 void ClassRoom::setDbManger(DbManager *manager) {
     dbManager = manager;
+}
+
+void ClassRoom::setCaseSensitive(bool b) {
+    mCaseSensitive = b;
 }
 
 int ClassRoom::prepare(int forGrade, int progress) {
@@ -62,6 +67,7 @@ void ClassRoom::chooseWords(int max, bool random) {
     if (max > 0 && selectedTotal > max)
         selectedTotal = max;
     if (random) {
+        qsrand(QDateTime::currentMSecsSinceEpoch() / 1000);
         for (int i = 0; i < selectedTotal; ++i) {
             int pos1 = qrand() % selectedTotal;
             int pos2 = qrand() % selectedTotal;
@@ -157,7 +163,7 @@ int ClassRoom::onAnswer(QString answer) {
         ret = (mMode == MODE_PRACTICE) ? RC_RETRY : RC_SKIP;
         ++failures;
     }
-    else if (QString::compare(answer, currentWord->getSpelling(), Qt::CaseSensitive) == 0) {
+    else if (QString::compare(answer, currentWord->getSpelling(), mCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive) == 0) {
         ret = RC_CORRECT;
         if (failures <= 0) {
             stats.incAnswered();

@@ -19,9 +19,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    loadSettings();
     createActions();
     createMenus();
-    loadSettings();
 
     connect( ui->lineEditWord,
              SIGNAL (returnPressed()),
@@ -49,8 +49,9 @@ void MainWindow::createMenus()
     userMenu->addAction(statsAct);
     userMenu->addAction(retryAct);
     userMenu->addSeparator();
-    userMenu->addAction(toolAct);
+    userMenu->addAction(caseAct);
     userMenu->addSeparator();
+    userMenu->addAction(toolAct);
     userMenu->addAction(aboutAct);
 
     ui->mainToolBar->addAction(loginAct);
@@ -115,6 +116,12 @@ void MainWindow::createActions()
     toolAct->setStatusTip(tr("Conversion tool"));
     connect(toolAct, &QAction::triggered, this, &MainWindow::convert);
 
+    caseAct = new QAction(tr("Case Sensitive"), this);
+    caseAct->setStatusTip(tr("Case sensitive or not"));
+    caseAct->setCheckable(true);
+    caseAct->setChecked(mCaseSensitive);
+    connect(caseAct, &QAction::triggered, this, &MainWindow::caseOption);
+
     aboutAct = new QAction(tr("About..."), this);
     aboutAct->setStatusTip(tr("About Everyday Spelling Bee"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::sayHello);
@@ -134,6 +141,16 @@ void MainWindow::sayHello() {
 
     msgBox.exec();
 }
+
+void MainWindow::caseOption() {
+    mCaseSensitive = !mCaseSensitive;
+    caseAct->setChecked(mCaseSensitive);
+    saveSettings();
+
+    if (classRoom)
+        classRoom->setCaseSensitive(mCaseSensitive);
+}
+
 //convert work list txt file to dictionary xml file
 void MainWindow::convert() {
     QString fileName = QFileDialog::getOpenFileName(this,
@@ -309,6 +326,7 @@ void MainWindow::slotOnLogin(QString& username,QString& dictionary, int &grade, 
         mStatId = 0;
         classRoom = new ClassRoom(mUsername, mDictionary, mMode);
         classRoom->setDbManger(mDbManager);
+        classRoom->setCaseSensitive(mCaseSensitive);
         onStart();
     }
     onUpdateUi();
@@ -325,6 +343,7 @@ void MainWindow::loadSettings() {
    mUsername=settings.value("UserName").toString();
    mDictionary=settings.value("Dictionary").toString();
    mGrade = mLastGoodGrade = settings.value("Grade").toInt();
+   mCaseSensitive = settings.value("CaseSensitive").toBool();
    if (mUsername.isEmpty())
        mUsername="Guest";
    settings.endGroup();
@@ -343,6 +362,7 @@ void MainWindow::saveSettings() {
     settings.setValue("Dictionary", mDictionary);
     if (mGrade > 0)
         settings.setValue("Grade", mGrade);
+    settings.setValue("CaseSensitive", mCaseSensitive);
     settings.endGroup();
 
     settings.beginGroup("Window");

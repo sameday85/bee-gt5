@@ -28,6 +28,7 @@ public:
     int getFinishedGrade();
 
     void setDbManger(DbManager *manager);
+    void setCaseSensitive(bool);
 
 private:
     void loadDictionary();
@@ -45,6 +46,7 @@ private:
     int mGrade;
     int mMode;
     int mMaxGrade;
+    bool mCaseSensitive;
 
     bool multipleGradeSupported;
     bool started;
