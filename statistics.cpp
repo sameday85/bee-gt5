@@ -40,7 +40,8 @@ void Statistics::setAnswered(int value) {
 }
 
 void Statistics::incAnswered() {
-    ++answered;
+    if (++answered > asked)
+        answered = asked;
 }
 
 qlonglong Statistics::getTime() {

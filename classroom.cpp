@@ -135,7 +135,9 @@ int ClassRoom::onAnswer(QString answer) {
 
         stats.incAsked();
     }
-    if (answer == "c") {
+    if (currentWord == nullptr) {
+    }
+    else if (answer == "c") {
         currentWord->pronounceCategory(true);
     }
     else if (answer == "c!") {
@@ -165,6 +167,7 @@ int ClassRoom::onAnswer(QString answer) {
     }
     else if (QString::compare(answer, currentWord->getSpelling(), mCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive) == 0) {
         ret = RC_CORRECT;
+        currentWord = nullptr;
         if (failures <= 0) {
             stats.incAnswered();
         }
@@ -235,23 +238,33 @@ void ClassRoom::loadDictionary () {
             else if (token == QXmlStreamReader::EndElement) {
                 if(xmlReader->name() == "word") {
                     if (!spelling.isEmpty()) {
-                        if (grade <= 0) {
-                            //set default grade base on the word index
-                            grade = (mWordList.size() / WORDS_PER_GRADE) + 1;
-                            if (grade > MAX_GRADE)
-                                grade = MAX_GRADE;
+                        bool found = false;
+                        for (int w = 0; w < mWordList.size(); ++w) {
+                            WordEx *one = mWordList.at(w);
+                            if (one->getSpelling().compare(spelling, Qt::CaseInsensitive) == 0) {
+                                found = true;
+                                break;
+                            }
                         }
-                        WordEx * word = new WordEx(spelling);
-                        word->setGrade(grade);
+                        if (!found) {
+                            if (grade <= 0) {
+                                //set default grade base on the word index
+                                grade = (mWordList.size() / WORDS_PER_GRADE) + 1;
+                                if (grade > MAX_GRADE)
+                                    grade = MAX_GRADE;
+                            }
+                            WordEx * word = new WordEx(spelling);
+                            word->setGrade(grade);
 
-                        WordCategory *wordCategory = new WordCategory(category, audio);
-                        wordCategory->addSense(new WordSense(definition, example));
-                        word->addCategory(wordCategory);
+                            WordCategory *wordCategory = new WordCategory(category, audio);
+                            wordCategory->addSense(new WordSense(definition, example));
+                            word->addCategory(wordCategory);
 
-                        mWordList.append(word);
+                            mWordList.append(word);
 
-                        if (grade > mMaxGrade)
-                            mMaxGrade = grade;
+                            if (grade > mMaxGrade)
+                                mMaxGrade = grade;
+                        }
                     }
                 }
             }

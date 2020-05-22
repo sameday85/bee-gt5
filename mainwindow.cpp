@@ -178,35 +178,44 @@ void MainWindow::convert() {
     QProgressDialog progress(msg, "Cancel", 0, words.count(), this);
     progress.setWindowModality(Qt::WindowModal);
 
-    QString dictPath=QString::asprintf("%s/%s/", szApplicationDir, FOLDER_DICT);
-    QString outputFileName = dictPath + "/" + QFileInfo(fileName).completeBaseName() + ".xml";
-    //create output file
-    QFile outputFile(outputFileName);
-    if (outputFile.open(QIODevice::Truncate|QIODevice::WriteOnly)) {
-        outputFile.write(QString("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n").toUtf8());
-        outputFile.write(QString("<words>\r\n").toUtf8());
-        for (int i = 0; i < words.count(); ++i) {
-            QString line = words.at(i);
-            WordEx word(line);
-            DictHelper *helper = new DictHelper();
-            bool ret = helper->download(&word, nullptr);
-            delete helper;
-            if (ret) {
-                QString xmlSlice=QString::asprintf("<word idx=\"%d\" grade=\"%d\">\r\n", i+1, 0);
-                xmlSlice += "  <spelling>" + word.getSpelling().trimmed() + "</spelling>\r\n";
-                xmlSlice += "  <category>" + word.getCategory().trimmed() + "</category>\r\n";
-                xmlSlice += "  <definitions>" + word.getDefinition().trimmed() + "</definitions>\r\n";
-                xmlSlice += "  <example>" + word.getSample().trimmed() + "</example>\r\n";
-                xmlSlice += "  <audio>" + word.getAudio().trimmed() + "</audio>\r\n";
-                xmlSlice += "</word>\r\n";
-                outputFile.write(xmlSlice.toUtf8());
+    int maxWords = 800;
+    int totalFiles = (words.count() + maxWords - 1 ) / maxWords;
+    int index = 0;
+    for (int file = 0; file < totalFiles; ++file) {
+        QString dictPath=QString::asprintf("%s/%s/", szApplicationDir, FOLDER_DICT);
+        QString extName = (totalFiles > 1) ? QString::asprintf("%02d.xml", file + 1) : ".xml";
+        QString outputFileName = dictPath + "/" + QFileInfo(fileName).completeBaseName() + extName;
+        int nStart = file * maxWords, nEnd = (file + 1) * maxWords;
+        if (nEnd > words.count())
+            nEnd = words.count();
+        //create output file
+        QFile outputFile(outputFileName);
+        if (outputFile.open(QIODevice::Truncate|QIODevice::WriteOnly)) {
+            outputFile.write(QString("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n").toUtf8());
+            outputFile.write(QString("<words>\r\n").toUtf8());
+            for (int i = nStart; i < nEnd; ++i) {
+                QString line = words.at(i);
+                WordEx word(line);
+                DictHelper *helper = new DictHelper();
+                bool ret = helper->download(&word, nullptr);
+                delete helper;
+                if (ret) {
+                    QString xmlSlice=QString::asprintf("<word idx=\"%d\" grade=\"%d\">\r\n", i + 1 - nStart, 0);
+                    xmlSlice += "  <spelling>" + word.getSpelling().trimmed() + "</spelling>\r\n";
+                    xmlSlice += "  <category>" + word.getCategory().trimmed() + "</category>\r\n";
+                    xmlSlice += "  <definitions>" + word.getDefinition().trimmed() + "</definitions>\r\n";
+                    xmlSlice += "  <example>" + word.getSample().trimmed() + "</example>\r\n";
+                    xmlSlice += "  <audio>" + word.getAudio().trimmed() + "</audio>\r\n";
+                    xmlSlice += "</word>\r\n";
+                    outputFile.write(xmlSlice.toUtf8());
+                }
+                progress.setValue(++index);
+                if (progress.wasCanceled())
+                    break;
             }
-            progress.setValue(i+1);
-            if (progress.wasCanceled())
-                break;
+            outputFile.write(QString("</words>\r\n").toUtf8());
+            outputFile.close();
         }
-        outputFile.write(QString("</words>\r\n").toUtf8());
-        outputFile.close();
     }
 }
 
@@ -282,7 +291,7 @@ void MainWindow::retry() {
 }
 
 void MainWindow::onEnterKey() {
-    QString answer = (mMode == MODE_LEARNING) ? "?" : ui->lineEditWord->text();
+    QString answer = ui->lineEditWord->text();
     if (answer.isEmpty())
        return;
 
@@ -295,7 +304,7 @@ void MainWindow::onEnterKey() {
         if (ret == RC_RETRY || ret == RC_SKIP) {
             showWord(classRoom->getCurrentWord());
         }
-        if (ret == RC_CORRECT || ret == RC_SKIP) {
+        if (ret == RC_CORRECT || (mMode != MODE_LEARNING && ret == RC_SKIP)) {
             ret = classRoom->present();
             if (ret == RC_FINISHED_ALL) {
                 mDone = true;
@@ -412,21 +421,6 @@ void MainWindow::afterPresent() {
         showWord(classRoom->getCurrentWord());
         classRoom->getCurrentWord()->pronounceWord();
         ++mPendingTimer;
-        QTimer::singleShot(AUTO_DELAY, this, SLOT(autoAdvance()));
-    }
-}
-
-void MainWindow::autoAdvance() {
-    if (mMode != MODE_LEARNING)
-        return;
-    if (--mPendingTimer > 0)
-        return;
-    if (mPaused) {
-        ++mPendingTimer;
-        QTimer::singleShot(200, this, SLOT(autoAdvance()));
-    }
-    else {
-        onEnterKey();
     }
 }
 

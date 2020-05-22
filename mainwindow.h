@@ -57,7 +57,6 @@ private slots:
     void viewStatistics();
     void onEnterKey();
     void afterPresent();
-    void autoAdvance();
 
     void alarm();
 
